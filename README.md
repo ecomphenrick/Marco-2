@@ -57,11 +57,11 @@ Realizar testes para verificar se a comunicação entre HPS e FPGA está funcion
 ## Fundamentação Teórica
 
 ### DE1-SoC e a Lightweight HPS-to-FPGA Bridge
-A DE1-SoC é a placa utilizada no projeto. Ela junta duas partes principais: 
+A DE1-SoC é a placa utilizada no nosso projeto. Ela junta duas partes principais: 
 o HPS, que é o processador ARM responsável por rodar o Linux, e a FPGA, 
 onde o co-processador ELM foi implementado em Verilog.
 
-Como essas duas partes precisam trocar informações, a placa possui bridges 
+Como essas duas partes precisam se comunicar e trocar informações, a placa possui bridges 
 que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridge,decidido e apresentado em uma das seções tutoriais,  
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
