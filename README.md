@@ -62,7 +62,7 @@ o HPS, que é o processador ARM responsável por rodar o Linux, e a FPGA,
 onde o co-processador ELM foi implementado em Verilog.
 
 Como essas duas partes precisam trocar informações, a placa possui bridges 
-que fazem essa comunicação. No projeto foi utilizada a Lightweight Bridge, 
+que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridge,decidido e apresentado em uma das seções tutoriais,  
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
 
