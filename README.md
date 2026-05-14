@@ -85,7 +85,7 @@ em determinados endereços de memória. Dessa forma, é possível enviar dados
 para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
 hardware.
 
-### API Drive ? (/dev/mem e Syscalls)
+### Drive (/dev/mem e Syscalls)
 O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
 da memória física do sistema. No projeto, ele foi utilizado para acessar 
 os registradores do co-processador conectados pela Lightweight Bridge.
