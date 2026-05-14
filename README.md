@@ -25,7 +25,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 ---
 
 ## Introdução e Definição do Problema
-Este projeto tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
+Este projeto faz parte do Marco2, da disciplina de SD(Sistemas Digitais) - TEC499 tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
 
 No Marco 2, o foco principal é permitir que o processador ARM consiga se comunicar corretamente com o co-processador através de MMIO (Memory-Mapped I/O), utilizando as bridges entre HPS e FPGA disponíveis na placa. Para isso, foi utilizada a ferramenta Platform Designer no Quartus Prime para integrar o hardware ao sistema do HPS.
 
