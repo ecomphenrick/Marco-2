@@ -9,7 +9,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 - [Fundamentação Teórica](-fundamentação-teórica)
    - [DE1-SoC e a Lightweight HPS-to-FPGA Bridge](-de1-soc-e-a-lightweight-hps-to-fpga-bridge)
    - [MMIO (Memory-Mapped I/O)](-mmio-memory-mapped-io)
-   - [/dev/mem e Syscalls](-devmem-e-syscalls)
+   - [Drive /dev/mem e Syscalls](-devmem-e-syscalls)
    - [Polling](-polling)
 - [Co-processador ELM](-co-processador-elm)
    - [Descrição](-descrição)
