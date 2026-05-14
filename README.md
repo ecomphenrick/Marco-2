@@ -25,13 +25,13 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 ---
 
 ## Introdução e Definição do Problema
-Este projeto faz parte do Marco2, da disciplina de SD(Sistemas Digitais) - TEC499 tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
+Este projeto faz parte do Marco2, da disciplina de SD(Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
 
 No Marco 2, o foco principal é permitir que o processador ARM consiga se comunicar corretamente com o co-processador através de MMIO (Memory-Mapped I/O), utilizando as bridges entre HPS e FPGA disponíveis na placa. Para isso, foi utilizada a ferramenta Platform Designer no Quartus Prime para integrar o hardware ao sistema do HPS.
 
 Além da parte de hardware, também foi desenvolvido um driver Linux com partes em Assembly ARM, responsável por fazer o controle e acesso aos registradores do co-processador.
 
-O principal desafio desta etapa é garantir que a comunicação entre o Linux e o co-processador funcione de forma correta e estável, permitindo o envio e leitura de dados sem erros de sincronização. Para isso, foi necessário mapear os registradores do módulo, configurar a comunicação entre HPS e FPGA e implementar as rotinas de acesso ao hardware.
+O principal desafio desta etapa é garantir que a comunicação entre o Linux e o co-processador funcione de forma correta e estável, permitindo o envio e leitura de dados sem erros de sincronização. Para isso, foi necessário mapear os registradores do módulo, configurar a comunicação entre HPS e FPGA e implementar as funções de acesso ao hardware.
 
 Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplicação em linguagem C consiga utilizar o co-processador através do driver desenvolvido.
 ## Requisitos Principais
@@ -40,7 +40,7 @@ Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplica
 Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer, permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
 
 ### Driver Linux em Assembly ARM
-Desenvolver um driver Linux com rotinas críticas em Assembly ARM para realizar o controle do co-processador e o acesso aos registradores do hardware.
+Desenvolver um driver Linux com funções em Assembly ARM para realizar o controle do co-processador e o acesso aos registradores do hardware.
 
 ### Comunicação via MMIO
 Implementar a comunicação utilizando MMIO (Memory-Mapped I/O), permitindo que o Linux consiga ler e escrever dados nos registradores do co-processador através de endereços de memória.
