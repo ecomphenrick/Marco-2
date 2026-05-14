@@ -85,6 +85,8 @@ em determinados endereços de memória. Dessa forma, é possível enviar dados
 para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
 hardware.
 
+No nosso projeto é de grande importância isso, por literalmente esta em toda a comunicação entre o Drive e o co-processador, no envio de Instruções, pulsos, polling e na leitura do digito esperado. 
+
 ### Drive (/dev/mem e Syscalls)
 O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
 da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
