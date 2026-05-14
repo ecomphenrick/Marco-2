@@ -87,7 +87,7 @@ hardware.
 
 ### Drive (/dev/mem e Syscalls)
 O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
-da memória física do sistema. No projeto, ele foi utilizado para acessar 
+da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
 os registradores do co-processador conectados pela Lightweight Bridge.
 
 Para fazer esse acesso, o programa utiliza syscalls, que são chamadas do 
@@ -95,7 +95,7 @@ sistema operacional. Funções permitem abrir o /dev/mem, mapear os
 endereços da FPGA na memória do programa e depois liberar os recursos 
 utilizados.
 
-A syscall mais importante nesse processo é o mmap(), porque é ela que 
+A syscall mais importante no nosso processo é o mmap(), porque é ela que 
 faz o mapeamento do endereço físico da FPGA, como o 0xFF200000, para o 
 espaço de memória do processo. Na prática, isso permite que o código em 
 Assembly consiga acessar os PIOs diretamente utilizando ponteiros, como 
