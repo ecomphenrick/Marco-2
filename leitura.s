@@ -38,6 +38,8 @@ store_bias:
 
         ldr r0, =buffer_bias @endereço do buffer
         ldrh r1, [r0]  @le os 2 primeiros bytes
+		rev16 r1,r1
+		sxth r1,r1
 	
 	mov r0, r1 @retornando valor
 
