@@ -28,6 +28,14 @@ void send_no_wait(uint32_t instrucao) {
     base[PIO_SIGNALS  / 4] = 0;
 }
 
+// reseta o co-processador antes de qualquer operação
+void reset_coprocessor() {
+    base[PIO_SIGNALS / 4] = 4;   // bit 2 = reset = 1
+    usleep(1000);
+    base[PIO_SIGNALS / 4] = 0;   // reset = 0
+    usleep(1000);
+}
+
 // ============================================================
 // Store Bias — 128 valores de 16 bits com sinal
 // Formato: [ não usado(6) | dado(16) bits 25-10 | endereço(7) bits 9-3 | OP(3)=011 ]
@@ -137,12 +145,16 @@ void store_weights() {
 }
 
 // ============================================================
-// Start — inicia inferência
-// Formato: [ padding(29) | OP(3)=101 ]
+// Start — inicia inferência e retorna resultado
+// Lê data_out ENQUANTO DONE ainda está alto para não perder o valor
 // ============================================================
-void start_inference() {
-    uint32_t instrucao = 5;  // OP = 101
-    send_instruction(instrucao);
+uint32_t start_inference() {
+    base[PIO_DATA_IN  / 4] = 5;  // OP = 101
+    base[PIO_SIGNALS  / 4] = 1;  // enable = 1
+    while (!(base[PIO_DATA_OUT / 4] & (1 << 4)));  // poll DONE
+    uint32_t resultado = base[PIO_DATA_OUT / 4];    // lê ENQUANTO DONE está alto
+    base[PIO_SIGNALS  / 4] = 0;  // enable = 0
+    return resultado;
 }
 
 int main() {
@@ -155,14 +167,13 @@ int main() {
                                      MAP_SHARED,
                                      mem_fd, LW_BASE);
 
+    reset_coprocessor();
     store_bias();
     store_beta();
     store_image();
     store_weights();
-    start_inference();
 
-    // lê resultado
-    uint32_t resultado = base[PIO_DATA_OUT / 4];
+    uint32_t resultado = start_inference();
 
     printf("data_out: ");
     int i;
