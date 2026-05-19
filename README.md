@@ -112,6 +112,45 @@ Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela es
 
 ## 4. Co-processador ELM
 
+## 4. Co-processador ELM
+
+O co-processador foi cedido aos grupos e foi implementado pelo monitor da 
+disciplina, Maike. Com ele foi entregue uma descrição detalhada e formatada 
+contendo modo de uso, barramentos, unidade de controle, de inferencia, load/store e ISA. Com ele em 
+mãos, iniciamos o processo de entender e analisar como funciona e 
+principalmente como usaríamos no nosso projeto. De forma que em sessões 
+tutoriais, foi bastante discutido que ele seria tratado como uma caixa preta, 
+mas que nós teríamos que conectar, já que no Marco 2 isso é a base do 
+problema — conectar a FPGA com o HPS.
+
+### Barramentos
+
+O co-processador possui 3 barramentos principais, dois de entrada e um de 
+saída.
+
+**Data In** — barramento de entrada de 32 bits utilizado exclusivamente para 
+o envio das instruções ao co-processador. Os 32 bits são preenchidos de 
+acordo com a instrução que será executada.
+
+**Signals** — barramento de entrada de 3 bits utilizado para enviar os sinais 
+de controle externos ao co-processador. Cada bit possui uma utilidade:
+
+| Bit | Sinal | Descrição |
+|-----|-------|-----------|
+| 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada |
+| 1 | Clear | Limpa resquícios de uma instrução anterior com erro |
+| 2 | Reset | Reseta os registradores do co-processador | ( imagem)
+
+**Data Out** — único barramento de saída, com largura de 32 bits, porém nem 
+todos os bits são utilizados:
+
+| Bits | Sinal | Descrição |
+|------|-------|-----------|
+| 0-3 | Resultado | Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência |
+| 4 | Done | Ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece |
+| 5 | Busy | Indica que uma operação ainda está sendo executada |
+| 6 | Error | Indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável | (imagem)
+
 ### 4.1 Descrição
 
 ### 4.2 Barramentos
