@@ -110,9 +110,7 @@ No projeto que fizemos, isso acontece durante a inferência do co-processador EL
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
 
-## 4. Co-processador ELM
-
-## 4. Co-processador ELM
+## Co-processador ELM
 
 O co-processador foi cedido aos grupos e foi implementado pelo monitor da 
 disciplina, Maike. Com ele foi entregue uma descrição detalhada e formatada 
@@ -122,6 +120,31 @@ principalmente como usaríamos no nosso projeto. De forma que em sessões
 tutoriais, foi bastante discutido que ele seria tratado como uma caixa preta, 
 mas que nós teríamos que conectar, já que no Marco 2 isso é a base do 
 problema — conectar a FPGA com o HPS.
+
+### Unidade de Controle
+
+A Unidade de Controle conecta todo o co-processador e é responsável por 
+receber as instruções e os sinais de controle externos, assim como retornar 
+as flags e os resultados das operações. A entrada de dados é realizada 
+através do barramento Data In e a saída através do Data Out.
+
+Dentro da Unidade de Controle é feita a decodificação da instrução recebida, 
+que a depender do opcode, direciona o co-processador para um estado de 
+memória ou de inferência.
+
+Um ponto importante é que durante a execução de uma instrução nenhuma outra 
+pode ser executada ao mesmo tempo — é necessário aguardar o fim da execução 
+atual para que uma nova instrução possa ser lida. Caso uma instrução seja 
+enviada enquanto outra ainda está sendo executada, a flag de erro poderá 
+ser ativada.
+
+
+### Unidade de Inferencia 
+
+
+
+
+### Load/Store 
 
 ### Barramentos
 
@@ -151,11 +174,9 @@ todos os bits são utilizados:
 | 5 | Busy | Indica que uma operação ainda está sendo executada |
 | 6 | Error | Indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável | (imagem)
 
-### 4.1 Descrição
 
-### 4.2 Barramentos
 
-### 4.3 ISA — Conjunto de Instruções
+### ISA — Conjunto de Instruções
 
 ---
 
