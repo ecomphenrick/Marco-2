@@ -19,7 +19,6 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 - [Modo de Uso](-modo-de-uso)
 - [Testes e Resultados](-testes-e-resultados)
 - [Erros e Limitações](-erros-e-limitações)
-- [Próximos Passos — Marco 3](-próximos-passos--marco-3)
 - [Referências](-referências)
 
 ---
@@ -138,13 +137,48 @@ atual para que uma nova instrução possa ser lida. Caso uma instrução seja
 enviada enquanto outra ainda está sendo executada, a flag de erro poderá 
 ser ativada.
 
+### Unidade de Inferência
 
-### Unidade de Inferencia 
+A Unidade de Inferência é o módulo responsável por abrigar os MACs e os 
+bancos de registradores utilizados durante o processo de cálculo. É dividida 
+em seis submodulos:
+
+**Primeira Camada** — responsável por realizar os cálculos contidos na 
+camada oculta do ELM. Utiliza a tangente hiperbólica como função de ativação.
+
+**Banco de 128 Registradores** — armazena um conjunto de registradores 
+organizados em colunas, realizando operações de leitura e escrita.
+
+**Segunda Camada** — responsável por realizar os cálculos contidos na 
+camada de saída. Não possui função de ativação.
+
+**Banco de 10 Registradores** — armazena o resultado dos neurônios da 
+camada de saída.
+
+**Argmax** — módulo comparador que busca a posição do registrador que 
+contém o maior valor da camada de saída.
+
+**Unidade de Controle de Inferência** — responsável por organizar a execução 
+de modo que cada etapa da ELM ocorra de maneira correta.
 
 
+### Load/Store Unit
 
+Módulo responsável por gerenciar as operações de leitura e escrita de 
+memória. É um módulo de memória genérico que implementa a criação dinâmica 
+de memórias RAM. Nesse projeto foram necessárias 4 instâncias:
 
-### Load/Store 
+**mem_img** — responsável por armazenar 784 valores de 8 bits 
+correspondentes aos pixels da imagem.
+
+**mem_win** — responsável por armazenar 100352 valores de 16 bits 
+correspondentes aos pesos da camada oculta.
+
+**mem_bias** — responsável por armazenar 128 valores de 16 bits 
+correspondentes aos bias da camada oculta.
+
+**mem_beta** — responsável por armazenar 1280 valores de 16 bits 
+correspondentes aos valores de beta da camada de saída.
 
 ### Barramentos
 
@@ -174,32 +208,51 @@ todos os bits são utilizados:
 | 5 | Busy | Indica que uma operação ainda está sendo executada |
 | 6 | Error | Indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável | (imagem)
 
-
-
 ### ISA — Conjunto de Instruções
 
----
+O co-processador possui 8 instruções, sendo 5 de memória e 1 de controle, 
+além de 2 não utilizadas no projeto. Todas possuem opcode de 3 bits nos 
+bits 31-29 do barramento Data In.
+
+**000 — Store Image** — armazena um pixel da imagem na memória.
+
+**001 — Store Weights Addr** — define o endereço onde o peso será armazenado.
+
+**010 — Store Weights Value** — armazena o peso no endereço definido.
+
+**011 — Store Bias** — armazena um bias na memória.
+
+**100 — Store Beta** — armazena um valor de beta na memória.
+
+**101 — Start** — inicia o processo de inferência.
+
+**110 — Status** — não utilizada. As flags são atualizadas diretamente no 
+barramento sem necessidade de solicitação.
+
+**111 — NOP** — não utilizada. Usada para inserção de bolhas em arquiteturas 
+com pipeline.
+
 
 ## 5. Descrição da Solução
 
+### Arquitetura Geral 
 
 
----
-
-## 6. Modo de Uso
 
 ---
 
-## 7. Testes e Resultados
+## Modo de Uso
 
 ---
 
-## 8. Erros e Limitações
+## Testes e Resultados
 
 ---
 
-## 9. Próximos Passos — Marco 3
+## Erros e Limitações
 
 ---
 
-## 10. Referências
+---
+
+## Referências
