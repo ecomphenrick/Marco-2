@@ -7,40 +7,21 @@
 .equ LW_BASE_PAGE, 0xFF200  @ endereço físico 0xFF200000 em páginas (>> 12)
 
 .data
-caminho_bias:   .asciz "/home/aluno/b_q.bin"       @ caminho do arquivo bias
-caminho_beta:   .asciz "/home/aluno/beta_q.bin"    @ caminho do arquivo beta
-caminho_imagem: .asciz "/home/aluno/imagem.bin"    @ caminho do arquivo imagem
-caminho_pesos:  .asciz "/home/aluno/W_in_q.bin"    @ caminho do arquivo pesos
-devmem:         .asciz "/dev/mem"                  @ arquivo de acesso à memória física
+devmem:         .asciz "/dev/mem"                   @ arquivo de acesso à memória física
+
 buffer_bias:    .space 256                          @ espaço destinado ao buffer (128x2 bytes)
 buffer_beta:    .space 2560                         @ espaço destinado ao buffer (1280x2 bytes)
 buffer_imagem:  .space 784                          @ espaço destinado ao buffer (784 bytes)
 buffer_pesos:   .space 2                            @ buffer dedicado para leitura dos pesos (1 valor x 2 bytes)
-sinal:          .byte 45                            @ '-'
-newline:        .byte 10                            @ '\n'
-num_buf:        .space 8                            @ buffer para os dígitos
-byte_buf:       .space 2                            @ buffer de 1 byte para write
 
 .text
-.global _start
-
-_start:
-    bl   mmap_lw                @ mapeia ponte LW → r10 = base virtual
-    mov  r10, r0
-
-    bl   reset_coprocessador    @ reseta os registradores do co-processador
-
-    bl   store_bias             @ envia bias
-    bl   store_beta             @ envia beta
-    bl   store_imagem           @ envia imagem
-    bl   store_pesos            @ envia pesos
-    bl   start_inferencia       @ inicia inferência → resultado em r0
-
-    and  r0, r0, #0xF           @ pega apenas bits 3-0 (dígito predito)
-    bl   print_signed           @ imprime no terminal
-
-    mov  r7, #1                 @ syscall exit
-    swi  0
+.global mmap_lw
+.global reset_coprocessador
+.global store_bias
+.global store_beta
+.global store_imagem
+.global store_pesos
+.global start_inferencia
 
 @ ============================================================
 @ mmap_lw: abre /dev/mem e mapeia a ponte LW (0xFF200000)
@@ -48,7 +29,7 @@ _start:
 @ ============================================================
 mmap_lw:
     push {r4, r5, r7, lr}
-
+    
     ldr  r0, =devmem            @ r0 = endereço da string "/dev/mem"
     mov  r1, #2                 @ O_RDWR
     mov  r2, #0                 @ não usado
@@ -63,30 +44,36 @@ mmap_lw:
     ldr  r5, =LW_BASE_PAGE      @ offset em páginas (0xFF200000 >> 12)
     mov  r7, #192               @ syscall mmap2
     swi  0                      @ chama o Linux → r0 = ponteiro virtual
-
+    
     pop  {r4, r5, r7, lr}
     bx   lr
 
 @ ============================================================
 @ reset_coprocessador: reseta os registradores do co-processador
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte
 @ ============================================================
 reset_coprocessador:
+    push {r10, lr}
+    mov  r10, r0                        
+
     mov  r2, #4                         @ bit 2 = reset = 1
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
     mov  r2, #0                         @ reset = 0
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
+    
+    pop  {r10, lr}
     bx   lr
 
 @ ============================================================
 @ store_bias: lê buffer e envia 128 instruções ao co-processador
 @ Formato: [ não usado(6) | dado(16) bits 25-10 | endereço(7) bits 9-3 | OP(3)=011 ]
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte, r1 = endereço da string do caminho
 @ ============================================================
 store_bias:
-    push {r8, r9, lr}
-
-    ldr  r0, =caminho_bias      @ r0 = endereço da string do caminho
+    push {r8, r9, r10, lr}
+    mov  r10, r0                        
+    
+    mov  r0, r1                 @ r0 = endereço da string do caminho passado pela API
     mov  r1, #0                 @ somente leitura
     mov  r2, #0                 @ não usado
     mov  r7, #5                 @ syscall open
@@ -132,18 +119,19 @@ bias_loop:
     b    bias_loop
 
 bias_fim:
-    pop  {r8, r9, lr}
+    pop  {r8, r9, r10, lr}
     bx   lr
 
 @ ============================================================
 @ store_beta: lê buffer e envia 1280 instruções ao co-processador
 @ Formato: [ não usado(2) | dado(16) bits 29-14 | endereço(11) bits 13-3 | OP(3)=100 ]
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte, r1 = endereço da string do caminho
 @ ============================================================
 store_beta:
-    push {r8, r9, lr}
+    push {r8, r9, r10, lr}
+    mov  r10, r0                        
 
-    ldr  r0, =caminho_beta      @ r0 = endereço da string do caminho
+    mov  r0, r1                 @ r0 = endereço da string do caminho
     mov  r1, #0                 @ somente leitura
     mov  r2, #0                 @ não usado
     mov  r7, #5                 @ syscall open
@@ -190,18 +178,19 @@ beta_loop:
     b    beta_loop
 
 beta_fim:
-    pop  {r8, r9, lr}
+    pop  {r8, r9, r10, lr}
     bx   lr
 
 @ ============================================================
 @ store_imagem: lê buffer e envia 784 instruções ao co-processador
 @ Formato: [ padding(11) | dado(8) bits 20-13 | endereço(10) bits 12-3 | OP(3)=000 ]
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte, r1 = endereço da string do caminho
 @ ============================================================
 store_imagem:
-    push {r8, r9, lr}
+    push {r8, r9, r10, lr}
+    mov  r10, r0                        
 
-    ldr  r0, =caminho_imagem    @ r0 = endereço da string do caminho
+    mov  r0, r1                 @ r0 = endereço da string do caminho
     mov  r1, #0                 @ somente leitura
     mov  r2, #0                 @ não usado
     mov  r7, #5                 @ syscall open
@@ -246,19 +235,20 @@ imagem_loop:
     b    imagem_loop
 
 imagem_fim:
-    pop  {r8, r9, lr}
+    pop  {r8, r9, r10, lr}
     bx   lr
 
 @ ============================================================
 @ store_pesos: envia 100352 pares addr+value ao co-processador
 @ Addr:  [ não usado(12) | endereço(17) bits 19-3 | OP(3)=001 ] SEM DONE
 @ Value: [ não usado(13) | dado(16) bits 18-3      | OP(3)=010 ] COM DONE
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte, r1 = endereço da string do caminho
 @ ============================================================
 store_pesos:
-    push {r8, r9, r11, r12, lr}
+    push {r8, r9, r10, r11, r12, lr}
+    mov  r10, r0                        
 
-    ldr  r0, =caminho_pesos     @ r0 = endereço da string do caminho
+    mov  r0, r1                 @ r0 = endereço da string do caminho
     mov  r1, #0                 @ somente leitura
     mov  r2, #0                 @ não usado
     mov  r7, #5                 @ syscall open
@@ -307,17 +297,18 @@ pesos_fim:
     mov  r7, #6                 @ syscall close
     swi  0                      @ fecha o arquivo
 
-    pop  {r8, r9, r11, r12, lr}
+    pop  {r8, r9, r10, r11, r12, lr}
     bx   lr
 
 @ ============================================================
 @ start_inferencia: envia START e lê resultado após DONE subir
 @ DONE só sobe após enable=0 (conforme documentação)
 @ Retorna: r0 = data_out (bits 3-0 = dígito predito)
-@ Depende: r10 = base virtual da ponte
+@ Parâmetros: r0 = base virtual da ponte
 @ ============================================================
 start_inferencia:
-    push {r7, lr}
+    push {r7, r10, lr}
+    mov  r10, r0                        
 
     mov  r2, #5                         @ OP = 101 (START)
     str  r2, [r10, #PIO_DATA_IN]        @ escreve no pio_data_in
@@ -333,37 +324,32 @@ start_poll:
 
     ldr  r0, [r10, #PIO_DATA_OUT]       @ lê resultado
 
-    pop  {r7, lr}
+    pop  {r7, r10, lr}
     bx   lr
 
 @ ============================================================
 @ send_instruction: escreve instrução, pulsa enable e aguarda DONE
 @ DONE só sobe após enable=0 (conforme documentação)
-@ Entrada: r2 = instrução de 32 bits
-@ Depende: r10 = base virtual da ponte
+@ Entrada: r2 = instrução de 32 bits, r10 = base virtual da ponte
 @ ============================================================
 send_instruction:
     push {r7, lr}
-
     str  r2, [r10, #PIO_DATA_IN]        @ escreve instrução no pio_data_in
     mov  r2, #1                         @ enable = 1 (latch da instrução)
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
     mov  r2, #0                         @ enable = 0 (DONE só sobe após isso)
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
-
 poll_done:
     ldr  r2, [r10, #PIO_DATA_OUT]       @ lê pio_data_out
     tst  r2, #(1 << 4)                  @ testa bit DONE (bit 4)
     beq  poll_done                      @ se DONE = 0, continua aguardando
-
     pop  {r7, lr}
     bx   lr
 
 @ ============================================================
 @ send_no_wait: escreve instrução e pulsa enable sem aguardar DONE
 @ Store Weights Addr não ativa DONE e leva apenas 2 ciclos
-@ Entrada: r2 = instrução de 32 bits
-@ Depende: r10 = base virtual da ponte
+@ Entrada: r2 = instrução de 32 bits, r10 = base virtual da ponte
 @ ============================================================
 send_no_wait:
     str  r2, [r10, #PIO_DATA_IN]        @ escreve instrução no pio_data_in
@@ -371,85 +357,4 @@ send_no_wait:
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
     mov  r2, #0                         @ enable = 0
     str  r2, [r10, #PIO_SIGNALS]        @ escreve no pio_signals
-    bx   lr
-
-@ ============================================================
-@ print_signed(r0): imprime r0 como decimal com sinal + newline
-@ ============================================================
-print_signed:
-    push {r4, r5, r6, r7, r10, r11, lr}
-
-    mov  r4, r0                 @ r4 = valor a imprimir
-    ldr  r5, =num_buf           @ r5 = buffer de dígitos
-    mov  r6, #0                 @ r6 = contador de dígitos
-
-    cmp  r4, #0                 @ é negativo?
-    bge  ps_positivo
-
-    mov  r0, #1                 @ escreve '-'
-    ldr  r1, =sinal
-    mov  r2, #1
-    mov  r7, #4
-    swi  0
-    rsb  r4, r4, #0             @ inverte sinal
-
-ps_positivo:
-    cmp  r4, #0                 @ é zero?
-    bne  ps_extrai
-
-    mov  r3, #48                @ caractere '0'
-    strb r3, [r5]
-    mov  r6, #1
-    b    ps_imprime
-
-ps_extrai:
-    cmp  r4, #0                 @ extrai dígitos por divisão
-    beq  ps_imprime
-
-    mov  r10, r4
-    mov  r11, #0
-
-ps_div:
-    cmp  r10, #10
-    blt  ps_div_fim
-    sub  r10, r10, #10
-    add  r11, r11, #1
-    b    ps_div
-
-ps_div_fim:
-    add  r3, r10, #48           @ converte dígito para ASCII
-    strb r3, [r5, r6]
-    add  r6, r6, #1
-    mov  r4, r11
-    b    ps_extrai
-
-ps_imprime:
-    sub  r6, r6, #1
-    ldr  r5, =num_buf
-
-ps_imp_loop:
-    cmp  r6, #0
-    blt  ps_newline
-
-    ldrb r3, [r5, r6]
-    ldr  r10, =byte_buf
-    strb r3, [r10]
-
-    mov  r0, #1
-    mov  r1, r10
-    mov  r2, #1
-    mov  r7, #4
-    swi  0
-
-    sub  r6, r6, #1
-    b    ps_imp_loop
-
-ps_newline:
-    mov  r0, #1
-    ldr  r1, =newline
-    mov  r2, #1
-    mov  r7, #4
-    swi  0
-
-    pop  {r4, r5, r6, r7, r10, r11, lr}
     bx   lr
