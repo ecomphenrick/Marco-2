@@ -75,6 +75,26 @@ A placa conta com as seguintes especificações relevantes para o projeto:
 
 ### Platform Designer
 
+O Platform Designer é uma ferramenta dentro do Quartus, apresentada durante 
+uma das sessões de desenvolvimento no laboratório. Com ela é possível montar 
+a ligação entre o HPS e a FPGA de forma visual.
+
+No projeto foram adicionados 3 PIOs e conectados ao HPS através da 
+Lightweight Bridge:
+
+- **PIO Data In** — 32 bits, saída — envia instruções ao co-processador
+- **PIO Signals** — 3 bits, saída — envia os sinais Enable, Clear e Reset
+- **PIO Data Out** — 32 bits, entrada — recebe as flags e o resultado
+
+Após a conexão de tudo, o Platform Designer atribuiu automaticamente 
+endereços de memória para cada PIO:
+
+Data In = `0xFF200000`
+Signals =`0xFF200010`
+Data Out = `0xFF200020`
+
+Esses endereços são os que o driver utiliza para se comunicar com o 
+co-processador via MMIO.
 
 ### MMIO (Memory-Mapped I/O)
 MMIO (Memory-Mapped I/O) é uma forma de comunicação onde os registradores 
