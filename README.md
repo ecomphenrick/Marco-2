@@ -264,8 +264,8 @@ A arquitetura do nosso projeto que foi realizado, é composta por quatro blocos 
 trabalham de forma em sequencia e em conjunto parte por parte para realizar a classificação de um dígito que deve ser descrito.
 O Driver Assembly ARM acessa o hardware através do /dev/mem, mapeando a 
 Lightweight HPS-to-FPGA Bridge no espaço de memória do processo. Depois disso, as instruções chegam aos PIOs configurados no Platform Designer ferramenta do Quartus, que 
-as mandam ao co-processador ELM na FPGA. O resultado — o dígito esperado
-entre 0 e 9 — é retornado pelo barramento Data Out e mostrado no terminal. 
+as mandam ao co-processador ELM na FPGA. O resultado,o dígito esperado
+entre 0 e 9, e é retornado pelo barramento Data Out e mostrado no terminal. 
 
 ---
 
