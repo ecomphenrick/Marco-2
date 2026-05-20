@@ -295,6 +295,28 @@ importante. O /dev/mem é mais rápido em testes e correções, além de não
 encerrar o sistema inteiro em caso de erro o que aconteceria se fosse 
 utilizado um módulo de kernel.
 
+
+### Funções Implementadas
+
+O driver desenvolvido no projeto possui um conjunto de funções responsáveis 
+pela comunicação entre o software e o co-processador implementado no FPGA. 
+Essas funções foram separadas em grupos para deixar a organização do sistema 
+mais simples e facilitar o controle das operações realizadas durante a execução.
+
+Estão divididas em 3 grandes grupos. As funções de inicialização são 
+responsáveis por preparar a comunicação com o hardware o sistema realiza 
+o acesso à Lightweight Bridge através do /dev/mem, faz o mapeamento dos 
+registradores em memória e configura os endereços que serão utilizados pelo 
+driver durante a execução.
+
+As funções de envio de dados são responsáveis por transmitir os dados 
+necessários para a inferência ao co-processador, como os pesos, bias, beta 
+e os pixels da imagem. Para isso o driver monta as instruções no formato 
+esperado pelo hardware e escreve os valores nos registradores correspondentes.
+
+As funções de comunicação com o hardware são responsáveis pelo controle 
+direto dos PIOs, realizando o envio de instruções com e sem polling, além 
+do disparo da inferência e leitura do resultado.
 ---
 
 ## Modo de Uso
