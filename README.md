@@ -275,6 +275,26 @@ Lightweight Bridge no espaço de memória do processo. Depois disso, as instruç
 as mandam ao co-processador ELM na FPGA. O resultado,o dígito esperado
 entre 0 e 9, e é retornado pelo barramento Data Out e mostrado no terminal. 
 
+### Escolha do /dev/mem
+
+O /dev/mem foi escolhido para fazer a conexão entre a FPGA e o HPS, 
+pois ele permite o acesso direto aos registradores mapeados na memória. 
+Com isso é possível mapear a Lightweight Bridge diretamente do espaço do 
+usuário e controlar os registradores do hardware sem precisar desenvolver 
+um driver de kernel.
+
+Foi escolhido também, discutido e apresentado em uma das sessões tutoriais 
+por todos os grupos, pela facilidade por conta de ser compatível com 
+Assembly puro. A outra opção seria o módulo de kernel, que tem função 
+parecida, mas foi descartada pois exigiria obrigatoriamente C no esqueleto 
+de registro, o que contradiz o requisito do Marco 2 de desenvolver o driver 
+em Assembly ARM.
+
+Mais à frente, nos testes e depuração, essa escolha se mostrou ainda mais 
+importante. O /dev/mem é mais rápido em testes e correções, além de não 
+encerrar o sistema inteiro em caso de erro — o que aconteceria se fosse 
+utilizado um módulo de kernel.
+
 ---
 
 ## Modo de Uso
