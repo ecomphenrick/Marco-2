@@ -54,7 +54,7 @@ Desenvolver um driver Linux com funções em Assembly ARM para realizar o contro
 Implementar a comunicação utilizando MMIO (Memory-Mapped I/O), permitindo que o Linux consiga ler e escrever dados nos registradores do co-processador através de endereços de memória.
 
 ### Controle do Co-processador
-Implementar as rotinas de controle do co-processador — incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado — através de uma API definida com funções como open, write, read e ioctl.
+Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado através de uma API definida com funções como open, write, read e ioctl.
 
 ### Leitura e Envio de Dados
 Garantir o envio correto dos dados de entrada para o co-processador e a leitura dos resultados retornados após a inferência.
@@ -149,7 +149,7 @@ mãos, iniciamos o processo de entender e analisar como funciona e
 principalmente como usaríamos no nosso projeto. De forma que em sessões 
 tutoriais, foi bastante discutido que ele seria tratado como uma caixa preta, 
 mas que nós teríamos que conectar, já que no Marco 2 isso é a base do 
-problema — conectar a FPGA com o HPS.
+problema conectar a FPGA com o HPS.
 
 ### Unidade de Controle
 
