@@ -16,6 +16,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Barramentos](-barramentos)
    - [ISA — Conjunto de Instruções](-isa--conjunto-de-instruções)
 - [Descrição da Solução](-descrição-da-solução)
+
 - [Modo de Uso](-modo-de-uso)
 - [Testes e Resultados](-testes-e-resultados)
 - [Erros e Limitações](-erros-e-limitações)
@@ -259,7 +260,12 @@ com pipeline.
 
 ### Arquitetura Geral 
 
-
+A arquitetura do nosso projeto que foi realizado, é composta por quatro blocos principais que 
+trabalham de forma em sequencia e em conjunto parte por parte para realizar a classificação de um dígito que deve ser descrito.
+O Driver Assembly ARM acessa o hardware através do /dev/mem, mapeando a 
+Lightweight HPS-to-FPGA Bridge no espaço de memória do processo. Depois disso, as instruções chegam aos PIOs configurados no Platform Designer ferramenta do Quartus, que 
+as mandam ao co-processador ELM na FPGA. O resultado — o dígito esperado
+entre 0 e 9 — é retornado pelo barramento Data Out e mostrado no terminal. 
 
 ---
 
