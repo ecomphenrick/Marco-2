@@ -395,7 +395,57 @@ inverte a ordem dos bytes (rev16) e faz extensão de sinal para 32 bits
 A imagem não precisa desse tratamento porque cada pixel ocupa apenas 1 byte 
 sem sinal.
 
+### Fluxo de Execução
 
+A primeira etapa do programa é fazer o mapeamento dos registradores da FPGA 
+na memória do processador. Isso é feito usando /dev/mem e a função mmap(), 
+permitindo que o software consiga acessar diretamente os PIOs do hardware. 
+Depois desse mapeamento, o processador passa a conseguir ler e escrever nos 
+registradores do co-processador como se fossem posições normais de memória.
+
+A segunda etapa é o reset do co-processador para que não exista estado 
+acumulativo de execuções anteriores que possa atrapalhar, tanto nos 
+registradores como na memória interna. Isso é realizado a partir do sinal 
+de reset, que é ativado e depois desativado, deixando o hardware pronto para 
+receber novos dados.
+
+O terceiro passo é o carregamento dos valores de bias para dentro do 
+co-processador, com a leitura do arquivo b_q.bin, percorrendo os valores 
+e enviando cada um para a memória interna da FPGA pelos PIOs.
+
+O quarto passo é parecido com o terceiro, mas agora com o arquivo beta. O 
+software abre o arquivo beta_q.bin, lê os dados e envia cada valor para 
+a memória correspondente no hardware.
+
+O quinto passo também é de envio, mas agora da imagem. Na store_imagem
+acontece a leitura do arquivo imagem.bin e o envio dos pixels para a 
+memória de imagem da FPGA. Como os pixels têm apenas 1 byte, não há 
+necessidade de tratamento de sinal nessa etapa.
+
+O sexto passo é a etapa mais pesada, por conta do carregamento de todos os 
+pesos da rede neural. O software lê o arquivo W_in_q.bin aos poucos e 
+envia os dados para a memória interna do co-processador. Ao contrário do 
+quinto passo, aqui há necessidade de tratamento para cada peso com correções 
+de sinal antes do envio.
+
+O sétimo passo é quando, com todos os dados carregados, o programa dá o 
+comando para iniciar a inferência. O co-processador executa as operações da 
+rede neural internamente, realizando os cálculos das camadas e determinando 
+qual saída possui o maior valor. Enquanto isso o processador fica aguardando 
+o sinal de conclusão (Done).
+
+O oitavo passo é quando a inferência termina. O resultado recebido possui 
+32 bits, mas apenas os 4 bits menos significativos representam o dígito 
+previsto. O programa então aplica uma operação lógica (AND 0xF) para 
+remover os outros bits e manter somente o valor final da classificação.
+
+O nono passo é quando, após receber o resultado, o programa converte o 
+número para caractere ASCII e imprime o valor no terminal. É a parte em que 
+o dígito reconhecido pela rede neural aparece para a visualização do usuário.
+
+O décimo e último passo é quando o programa encerra sua execução e devolve 
+o controle ao sistema operacional. Os recursos utilizados, como o acesso ao 
+/dev/mem, são liberados pelo Linux.
 
 ---
 
