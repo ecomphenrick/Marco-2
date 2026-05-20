@@ -292,7 +292,7 @@ em Assembly ARM.
 
 Mais à frente, nos testes e depuração, essa escolha se mostrou ainda mais 
 importante. O /dev/mem é mais rápido em testes e correções, além de não 
-encerrar o sistema inteiro em caso de erro — o que aconteceria se fosse 
+encerrar o sistema inteiro em caso de erro o que aconteceria se fosse 
 utilizado um módulo de kernel.
 
 ---
