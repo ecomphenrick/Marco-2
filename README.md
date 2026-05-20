@@ -330,6 +330,41 @@ do disparo da inferência e leitura do resultado.
 - `send_no_wait` — envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
 - `start_inferencia` — envia a instrução Start, aguarda Done e retorna o dígito predito
 
+### Protocolo de Envio — Enable e Polling
+
+A comunicação entre o processador ARM e o co-processador no projeto é feita 
+através de uma implementação simples de sincronização baseada nos sinais 
+Enable e Done. O objetivo é garantir que cada instrução enviada pelo driver 
+seja executada completamente antes da próxima começar.
+
+O sinal Enable, controlado pelo bit 0 do registrador PIO_SIGNALS, funciona 
+como um pulso de ativação. Primeiro o driver escreve a instrução no 
+PIO_DATA_IN, depois coloca o Enable em nível lógico 1 para avisar ao 
+hardware que existe uma nova instrução disponível. Em seguida o sinal retorna 
+imediatamente para 0.
+
+Esse retorno para 0 é obrigatório porque o co-processador só ativa o sinal 
+Done após detectar o fim do pulso de Enable. Caso o Enable permaneça em 1, 
+o processamento até pode ocorrer internamente, porém o Done nunca será 
+acionado, fazendo o software ficar preso indefinidamente no loop de polling.
+
+Após o pulso de Enable, o driver entra em um laço de polling lendo 
+continuamente o registrador PIO_DATA_OUT. Nesse processo o bit 4 é sempre 
+verificado, pois ele representa o sinal Done. Enquanto esse bit permanecer 
+em 0, significa que o co-processador ainda está executando a instrução. 
+Quando Done passa para 1, o driver entende que a operação terminou e pode 
+continuar a execução normalmente.
+
+O polling foi utilizado para garantir a sincronização entre software e 
+hardware sem necessidade de interrupções.
+
+Existe ainda um caso especial relacionado à instrução Store Weights Addr 
+(OP=001). Segundo a documentação do co-processador, essa operação leva 
+apenas alguns ciclos de clock e não ativa o sinal Done. Por esse motivo 
+ela utiliza a função send_no_wait, que realiza apenas o pulso de Enable 
+sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
+o programa permaneceria travado esperando um Done que nunca seria ativado.
+
 
 ---
 
