@@ -317,6 +317,8 @@ esperado pelo hardware e escreve os valores nos registradores correspondentes.
 As funções de comunicação com o hardware são responsáveis pelo controle 
 direto dos PIOs, realizando o envio de instruções com e sem polling, além 
 do disparo da inferência e leitura do resultado.
+
+
 ---
 
 ## Modo de Uso
