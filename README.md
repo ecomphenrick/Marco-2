@@ -16,7 +16,15 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Barramentos](-barramentos)
    - [ISA — Conjunto de Instruções](-isa--conjunto-de-instruções)
 - [Descrição da Solução](-descrição-da-solução)
+## Descrição da Solução
 
+- [Arquitetura Geral](-arquitetura-geral)
+- [Escolha do /dev/mem](-escolha-do-devmem)
+- [Funções Implementadas](-funções-implementadas)
+- [Montagem da Instrução de 32 bits](-montagem-da-instrução-de-32-bits)
+- [Protocolo de Envio](-protocolo-de-envio)
+- [Leitura dos Arquivos .bin](-leitura-dos-arquivos-bin)
+- [Fluxo de Execução](-fluxo-de-execução)
 - [Modo de Uso](-modo-de-uso)
 - [Testes e Resultados](-testes-e-resultados)
 - [Erros e Limitações](-erros-e-limitações)
