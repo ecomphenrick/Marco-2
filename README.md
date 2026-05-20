@@ -163,7 +163,7 @@ que a depender do opcode, direciona o co-processador para um estado de
 memória ou de inferência.
 
 Um ponto importante é que durante a execução de uma instrução nenhuma outra 
-pode ser executada ao mesmo tempo — é necessário aguardar o fim da execução 
+pode ser executada ao mesmo tempo é necessário aguardar o fim da execução 
 atual para que uma nova instrução possa ser lida. Caso uma instrução seja 
 enviada enquanto outra ainda está sendo executada, a flag de erro poderá 
 ser ativada.
