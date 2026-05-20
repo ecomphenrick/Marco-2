@@ -365,6 +365,37 @@ ela utiliza a função send_no_wait, que realiza apenas o pulso de Enable
 sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
 o programa permaneceria travado esperando um Done que nunca seria ativado.
 
+### Leitura dos Arquivos .bin
+
+Antes de enviar os dados para o co-processador, no nosso projeto o programa precisa ler os 
+arquivos .bin usando syscalls do Linux em Assembly ARM. O processo segue 
+sempre três etapas: abrir o arquivo, ler os dados para um buffer na RAM e 
+depois fechar o arquivo.
+
+O open retorna um identificador chamado file descriptor, que é usado nas 
+próximas operações. Em seguida, o read copia os bytes do arquivo para 
+buffers declarados na memória do programa. Depois da leitura, o arquivo é 
+fechado com close, liberando o recurso no sistema.
+
+Cada arquivo possui um buffer próprio na RAM. Os arquivos de bias, beta e 
+imagem são pequenos e podem ser carregados completamente. Já o arquivo de 
+pesos (W_in_q.bin) é muito maior, então o programa lê apenas 2 bytes por 
+vez dentro do loop de envio, evitando ocupar muita memória.
+
+
+
+![Tabela de arquivos e buffers](imagens/tabela_arquivos.png)
+
+
+
+Após a leitura, alguns valores ainda precisam ser convertidos antes de serem 
+usados. Bias, beta e pesos são números de 16 bits com sinal, então o código 
+inverte a ordem dos bytes (rev16) e faz extensão de sinal para 32 bits 
+(sxth), já que os arquivos estão em big-endian e o ARM usa little-endian. 
+A imagem não precisa desse tratamento porque cada pixel ocupa apenas 1 byte 
+sem sinal.
+
+
 
 ---
 
