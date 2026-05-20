@@ -263,8 +263,73 @@ barramento sem necessidade de solicitação.
 **111 — NOP** — não utilizada. Usada para inserção de bolhas em arquiteturas 
 com pipeline.
 
+## Metodologia Utilizada 
+## Metodologia
 
-## 5. Descrição da Solução
+O desenvolvimento do Marco 2 foi realizado seguindo a metodologia PBL, 
+avançando de forma crescente ao longo das sessões tutoriais, com cada seção com metas, ideias e fatos que auxiliaram de forma coletiva o avanço do projeto. Inicialmente, 
+o foco esteve na compreensão teórica da arquitetura da DE1-SoC, da 
+comunicação entre HPS e FPGA e do funcionamento do acesso via MMIO. A 
+partir disso, nosso projeto foi incrementando pouco a pouco evoluçoes de cada seção, passando pela 
+configuração e entendimento do ambiente Linux embarcado que irianos trabalhaar, com a complemtntação e interligação do co processador cedido por um monitor da materia, testes iniciais em linguagem C 
+e, posteriormente, implementação do driver final em Assembly ARM. Durante 
+todo o processo, os roteiros de laboratório serviram como base para o 
+desenvolvimento, principalmente o Lab 0, voltado para a introdução de como funciona a interligação dos modulos com 
+a placa e acesso via SSH, e o Lab 2, que introduziu a integração HPS↔FPGA 
+utilizada no projeto.
+
+O primeiro contato com a placa aconteceu durante o Lab 0, que apresentou 
+o acesso à DE1-SoC via SSH e a utilização de comandos Linux diretamente 
+no terminal da placa. Essa etapa foi importante para que o grupo entendesse 
+como executar programas, transferir arquivos e utilizar o ambiente Linux 
+embarcado da FPGA.
+
+Em seguida, o Lab 2 serviu como principal base técnica do projeto, 
+introduzindo a comunicação HPS↔FPGA através de MMIO (Memory-Mapped I/O). 
+Nesse laboratório foram estudados conceitos como Platform Designer, 
+Lightweight Bridge, utilização de PIOs e acesso a registradores mapeados 
+em memória usando /dev/mem e mmap em C. A partir desse ponto, o grupo gnahou uma nova froma de resolver o problema, e 
+passou a compreender como o processador ARM poderia controlar periféricos 
+implementados na FPGA.
+
+Após o entendimento inicial da arquitetura, foi disponibilizado pelo monitor 
+o co-processador ELM já implementado em Verilog. Entretanto, o módulo foi 
+entregue sem integração pronta com o HPS, exigindo que o grupo realizasse 
+toda a configuração do sistema no Platform Designer. Foram então adicionados 
+os PIOs, que ja foram apresentados e na proxima seção vao ser aprofundados, eles foram necessários para entrada de dados, sinais de controle e leitura de 
+resultados, conectando-os ao HPS através da Lightweight HPS-to-FPGA Bridge.
+
+Para permitir o desenvolvimento fora do laboratório, também foi configurada 
+uma máquina virtual Linux nos notebooks pessoais, para o melhor entendimento e disponibilidade de desenvolver sem depender tanto do LEDS. Dessa forma, o código Assembly 
+podia ser escrito e compilado localmente, enquanto os testes finais eram 
+executados remotamente na DE1-SoC via SSH, de forma que os testes eram ja realizados sem perca de tempo, o que fez acelerar mais a resolução do problema.
+
+Os primeiros testes em baixo nível foram realizados utilizando pequenos 
+programas em Assembly para acender LEDs da FPGA, esses testes teve como motivação um das metas de uma seção, que foi bem produtiva por conta desse priemiro contato com a programção de fato em assembly, alem da pesquisa e entendimento do Drive. Inicialmente ocorreram 
+erros de segmentação, o que ajudou a identificar que o hardware ainda não 
+estava corretamente gravado na placa. Após o pinamento dos sinais, compilação 
+do projeto no Quartus e gravação do arquivo .sof, o acesso aos endereços 
+físicos passou a funcionar corretamente.
+
+Com o hardware validado, foi desenvolvido inicialmente um driver em linguagem 
+C, antes mesmo de assembly puro, para testar toda a lógica de comunicação com o co-processador. Nessa etapa 
+foram implementadas as rotinas de envio de pesos, bias, imagem e leitura do 
+dígito predito, facilitando por ser em C, a depuração. O uso do C permitiu validar rapidamente o protocolo de 
+comunicação antes da implementação definitiva em Assembly ARM.
+
+Depois da validação funcional em C, o driver foi reescrito em Assembly ARM. 
+O desenvolvimento foi feito de forma incremental, função por função, 
+realizando testes constantes diretamente na placa. Durante essa etapa, o 
+grupo trabalhou diretamente com instruções de manipulação de bits, 
+deslocamentos, máscaras e escrita em registradores mapeados em memória, 
+aprofundando o entendimento sobre comunicação de hardware em baixo nível.
+
+Por fim, foram realizados testes completos de classificação utilizando o 
+driver final em Assembly e o hardware gravado na FPGA. Os resultados eram 
+exibidos no terminal via SSH, confirmando o funcionamento correto da 
+integração entre HPS, FPGA e o co-processador ELM.
+
+## Descrição da Solução
 
 ### Arquitetura Geral 
 
@@ -395,7 +460,57 @@ inverte a ordem dos bytes (rev16) e faz extensão de sinal para 32 bits
 A imagem não precisa desse tratamento porque cada pixel ocupa apenas 1 byte 
 sem sinal.
 
+### Fluxo de Execução
 
+A primeira etapa do programa é fazer o mapeamento dos registradores da FPGA 
+na memória do processador. Isso é feito usando /dev/mem e a função mmap(), 
+permitindo que o software consiga acessar diretamente os PIOs do hardware. 
+Depois desse mapeamento, o processador passa a conseguir ler e escrever nos 
+registradores do co-processador como se fossem posições normais de memória.
+
+A segunda etapa é o reset do co-processador para que não exista estado 
+acumulativo de execuções anteriores que possa atrapalhar, tanto nos 
+registradores como na memória interna. Isso é realizado a partir do sinal 
+de reset, que é ativado e depois desativado, deixando o hardware pronto para 
+receber novos dados.
+
+O terceiro passo é o carregamento dos valores de bias para dentro do 
+co-processador, com a leitura do arquivo b_q.bin, percorrendo os valores 
+e enviando cada um para a memória interna da FPGA pelos PIOs.
+
+O quarto passo é parecido com o terceiro, mas agora com o arquivo beta. O 
+software abre o arquivo beta_q.bin, lê os dados e envia cada valor para 
+a memória correspondente no hardware.
+
+O quinto passo também é de envio, mas agora da imagem. Na store_imagem
+acontece a leitura do arquivo imagem.bin e o envio dos pixels para a 
+memória de imagem da FPGA. Como os pixels têm apenas 1 byte, não há 
+necessidade de tratamento de sinal nessa etapa.
+
+O sexto passo é a etapa mais pesada, por conta do carregamento de todos os 
+pesos da rede neural. O software lê o arquivo W_in_q.bin aos poucos e 
+envia os dados para a memória interna do co-processador. Ao contrário do 
+quinto passo, aqui há necessidade de tratamento para cada peso com correções 
+de sinal antes do envio.
+
+O sétimo passo é quando, com todos os dados carregados, o programa dá o 
+comando para iniciar a inferência. O co-processador executa as operações da 
+rede neural internamente, realizando os cálculos das camadas e determinando 
+qual saída possui o maior valor. Enquanto isso o processador fica aguardando 
+o sinal de conclusão (Done).
+
+O oitavo passo é quando a inferência termina. O resultado recebido possui 
+32 bits, mas apenas os 4 bits menos significativos representam o dígito 
+previsto. O programa então aplica uma operação lógica (AND 0xF) para 
+remover os outros bits e manter somente o valor final da classificação.
+
+O nono passo é quando, após receber o resultado, o programa converte o 
+número para caractere ASCII e imprime o valor no terminal. É a parte em que 
+o dígito reconhecido pela rede neural aparece para a visualização do usuário.
+
+O décimo e último passo é quando o programa encerra sua execução e devolve 
+o controle ao sistema operacional. Os recursos utilizados, como o acesso ao 
+/dev/mem, são liberados pelo Linux.
 
 ---
 
