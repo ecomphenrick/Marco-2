@@ -6,7 +6,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 - [Requisitos Principais](#requisitos-principais)
 - [Fundamentação Teórica](#fundamentação-teórica)
    - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
-   - [/dev/mem e Syscalls](#devmem-e-syscalls)
+   - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
    - [Polling](#polling)
 - [Materiais e Métodos](#materiais-e-métodos)
    - [DE1-SoC](#de1-soc)
@@ -24,13 +24,12 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Escolha do /dev/mem](#escolha-do-devmem)
    - [Funções Implementadas](#funções-implementadas)
    - [Montagem da Instrução de 32 bits](#montagem-da-instrução-de-32-bits)
-   - [Protocolo de Envio](#protocolo-de-envio)
+   - [Protocolo de Envio — Enable e Polling](#Protocolo de Envio — Enable e Polling)
    - [Leitura dos Arquivos .bin](#leitura-dos-arquivos-bin)
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
 - [Testes e Resultados](#testes-e-resultados)
 - [Erros e Limitações](#erros-e-limitações)
-- [Próximos Passos — Marco 3](#próximos-passos--marco-3)
 - [Referências](#referências)
 ---
 
@@ -66,7 +65,43 @@ Realizar testes para verificar se a comunicação entre HPS e FPGA está funcion
 
 ## Fundamentação Teórica
 
-### DE1-SoC e a Lightweight HPS-to-FPGA Bridge
+### MMIO (Memory-Mapped I/O)
+MMIO (Memory-Mapped I/O) é uma forma de comunicação onde os registradores 
+do hardware funcionam como posições de memória. Na prática, isso significa 
+que o Linux consegue controlar o co-processador apenas lendo e escrevendo 
+em determinados endereços de memória. Dessa forma, é possível enviar dados 
+para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
+hardware.
+
+No nosso projeto é de grande importância isso, por literalmente esta em toda a comunicação entre o Drive e o co-processador, no envio de Instruções, pulsos, polling e na leitura do digito esperado. 
+
+### Drive /dev/mem e Syscalls
+O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
+da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
+os registradores do co-processador conectados pela Lightweight Bridge.
+
+Para fazer esse acesso, o programa utiliza syscalls, que são chamadas do 
+sistema operacional. Funções permitem abrir o /dev/mem, mapear os 
+endereços da FPGA na memória do programa e depois liberar os recursos 
+utilizados.
+
+A syscall mais importante no nosso processo é o mmap(), porque é ela que 
+faz o mapeamento do endereço físico da FPGA, como o 0xFF200000, para o 
+espaço de memória do processo. Na prática, isso permite que o código em 
+Assembly consiga acessar os PIOs diretamente utilizando ponteiros, como 
+se estivesse acessando variáveis normais da memória.
+
+### Polling
+Polling é uma forma simples de acompanhar o funcionamento de um hardware durante a execução de alguma tarefa. Em vez do hardware avisar sozinho quando terminou o processamento, o software fica verificando continuamente o registrador de status até receber a resposta esperada.
+
+No projeto que fizemos, isso acontece durante a inferência do co-processador ELM. Depois que o Linux envia os dados e inicia o processamento, o driver fica lendo as flags de status, como Busy e Done, para verificar se a execução ainda está acontecendo ou se já foi finalizada.
+
+Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
+
+### Materiais e Métodos
+
+## DE1-SoC
+
 A DE1-SoC é a placa utilizada no nosso projeto. Ela junta duas partes principais: 
 o HPS, que é o processador ARM responsável por rodar o Linux, e a FPGA, 
 onde o co-processador ELM foi implementado em Verilog.
@@ -84,7 +119,7 @@ A placa conta com as seguintes especificações relevantes para o projeto:
 - Sistema operacional Linux embarcado rodando no HPS
 - Lightweight Bridge com endereço base 0xFF200000
 
-### Platform Designer
+## Platform Designer
 
 O Platform Designer é uma ferramenta dentro do Quartus, apresentada durante 
 uma das sessões de desenvolvimento no laboratório. Com ela é possível montar 
@@ -109,40 +144,9 @@ Data Out = 0xFF200020
 Esses endereços são os que o driver utiliza para se comunicar com o 
 co-processador via MMIO.
 
-### MMIO (Memory-Mapped I/O)
-MMIO (Memory-Mapped I/O) é uma forma de comunicação onde os registradores 
-do hardware funcionam como posições de memória. Na prática, isso significa 
-que o Linux consegue controlar o co-processador apenas lendo e escrevendo 
-em determinados endereços de memória. Dessa forma, é possível enviar dados 
-para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
-hardware.
-
-No nosso projeto é de grande importância isso, por literalmente esta em toda a comunicação entre o Drive e o co-processador, no envio de Instruções, pulsos, polling e na leitura do digito esperado. 
-
-### Drive (/dev/mem e Syscalls)
-O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
-da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
-os registradores do co-processador conectados pela Lightweight Bridge.
-
-Para fazer esse acesso, o programa utiliza syscalls, que são chamadas do 
-sistema operacional. Funções permitem abrir o /dev/mem, mapear os 
-endereços da FPGA na memória do programa e depois liberar os recursos 
-utilizados.
-
-A syscall mais importante no nosso processo é o mmap(), porque é ela que 
-faz o mapeamento do endereço físico da FPGA, como o 0xFF200000, para o 
-espaço de memória do processo. Na prática, isso permite que o código em 
-Assembly consiga acessar os PIOs diretamente utilizando ponteiros, como 
-se estivesse acessando variáveis normais da memória.
-
-### Polling
-Polling é uma forma simples de acompanhar o funcionamento de um hardware durante a execução de alguma tarefa. Em vez do hardware avisar sozinho quando terminou o processamento, o software fica verificando continuamente o registrador de status até receber a resposta esperada.
-
-No projeto que fizemos, isso acontece durante a inferência do co-processador ELM. Depois que o Linux envia os dados e inicia o processamento, o driver fica lendo as flags de status, como Busy e Done, para verificar se a execução ainda está acontecendo ou se já foi finalizada.
-
-Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
-
 ## Co-processador ELM
+
+### Descrição
 
 O co-processador foi cedido aos grupos e foi implementado pelo monitor da 
 disciplina, Maike. Com ele foi entregue uma descrição detalhada e formatada 
@@ -265,7 +269,6 @@ barramento sem necessidade de solicitação.
 **111 — NOP** — não utilizada. Usada para inserção de bolhas em arquiteturas 
 com pipeline.
 
-## Metodologia Utilizada 
 ## Metodologia
 
 O desenvolvimento do Marco 2 foi realizado seguindo a metodologia PBL, 
@@ -396,6 +399,8 @@ do disparo da inferência e leitura do resultado.
 - `send_instruction` — envia instrução no formato de 32 bits e aguarda a flag Done subir
 - `send_no_wait` — envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
 - `start_inferencia` — envia a instrução Start, aguarda Done e retorna o dígito predito
+
+### Montagem da Instrução de 32 bits
 
 ### Protocolo de Envio — Enable e Polling
 
