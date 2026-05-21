@@ -406,6 +406,39 @@ do disparo da inferência e leitura do resultado.
 
 ### Montagem da Instrução de 32 bits
 
+### Montagem da Instrução de 32 bits
+
+A comunicação entre o processador ARM e o co-processador do nosso projeto foi fwito implementando na 
+FPGA através de instruções de 32 bits definidas pela ISA do 
+projeto. Cada instrução possui campos específicos e diferentes, como opcode, endereço 
+e dado, ocupando posições fixas dentro desses 32 bits, como já visto 
+anteriormente.
+
+Por isso foi necessário que o software montasse manualmente cada instrução 
+antes de enviá-la ao hardware. Esse processo foi implementado em Assembly 
+ARM no arquivo (Assembly/assembly.s).
+
+As intruçoes foram contruidas com base princiapl em três operaçoes em assembly, sendo elas LSL, AND e ADD.  
+
+A instrução (LSL) é utilizada para deslocar os bits para a esquerda, 
+colocando cada informação na posição correta dentro da instrução de 32 bits.
+
+Depois do deslocamento, foi necessário aplicar máscaras utilizando (AND)
+para assegurar que o valor não ultrapassasse o tamanho do campo reservado. 
+Isso evita que bits extras acabem sobrescrevendo partes importantes da 
+instrução, como endereço ou opcode e assim garantindo o correto funcionamento.
+
+Após posicionar todos os campos corretamente, a instrução (ORR) foi 
+utilizada para juntar tudo em um único valor de 32 bits. No final desse 
+processo, o registrador contém a instrução completa pronta para ser enviada 
+ao co-processador.
+
+Como exemplo, na montagem de uma instrução Store Image, primeiro o valor 
+do pixel é deslocado para os bits correspondentes ao campo de dado. Depois 
+o endereço também é deslocado para sua posição correta. Em seguida, máscaras 
+são aplicadas para limitar os campos ao tamanho definido pela ISA. Por fim, 
+todos os campos são unidos utilizando (ORR).
+
 ### Protocolo de Envio — Enable e Polling
 
 A comunicação entre o processador ARM e o co-processador no projeto é feita 
