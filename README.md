@@ -98,6 +98,10 @@ No projeto que fizemos, isso acontece durante a inferência do co-processador EL
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
 
+
+---
+
+
 ## Materiais e Métodos
 
 ### DE1-SoC
