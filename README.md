@@ -24,7 +24,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Escolha do /dev/mem](#escolha-do-devmem)
    - [Funções Implementadas](#funções-implementadas)
    - [Montagem da Instrução de 32 bits](#montagem-da-instrução-de-32-bits)
-   - [Protocolo de Envio — Enable e Polling](#Protocolo de Envio — Enable e Polling)
+   - [Protocolo de Envio — Enable e Polling](#protocolo-de-envio--enable-e-polling)
    - [Leitura dos Arquivos .bin](#leitura-dos-arquivos-bin)
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
@@ -98,9 +98,9 @@ No projeto que fizemos, isso acontece durante a inferência do co-processador EL
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
 
-### Materiais e Métodos
+## Materiais e Métodos
 
-## DE1-SoC
+### DE1-SoC
 
 A DE1-SoC é a placa utilizada no nosso projeto. Ela junta duas partes principais: 
 o HPS, que é o processador ARM responsável por rodar o Linux, e a FPGA, 
@@ -119,7 +119,7 @@ A placa conta com as seguintes especificações relevantes para o projeto:
 - Sistema operacional Linux embarcado rodando no HPS
 - Lightweight Bridge com endereço base 0xFF200000
 
-## Platform Designer
+### Platform Designer
 
 O Platform Designer é uma ferramenta dentro do Quartus, apresentada durante 
 uma das sessões de desenvolvimento no laboratório. Com ela é possível montar 
@@ -144,7 +144,7 @@ Data Out = 0xFF200020
 Esses endereços são os que o driver utiliza para se comunicar com o 
 co-processador via MMIO.
 
-## Co-processador ELM
+### Co-processador ELM
 
 ### Descrição
 
