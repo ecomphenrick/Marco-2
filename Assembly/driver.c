@@ -10,7 +10,7 @@ int main(){
 
     printf("Iniciando mapeamento...\n");
 
-    void* endereco = mmap_lw();
+    void* endereco = mapeia_memoria();
 
     if (!endereco || endereco == (void*)-1){
         printf("Erro no mapeamento.\n");
@@ -32,14 +32,14 @@ int main(){
         store_pesos(endereco, "bins/W_in_q.bin");
 
         // Gera o nome do arquivo: 1.bin, 2.bin, 3.bin...
-        sprintf(nome_arquivo, "100/%d.bin", i);
+        sprintf(nome_arquivo, "bins/%d.bin", i);
 
         printf("Enviando imagem: %s\n", nome_arquivo);
         store_imagem(endereco, nome_arquivo);
 
         printf("Iniciando a inferencia...\n");
 
-        unsigned int resultado = start_inferencia(endereco);
+        unsigned int resultado = comeca_infer(endereco);
 
         // Aplica a máscara 0x0F para isolar os 4 bits da predição
         printf("O resultado da inferencia e: %d\n", resultado & 0x0F);
