@@ -210,7 +210,7 @@ imagem_loop:
     cmp  r6, r5                 
     beq  imagem_fim
 
-    ldrb r1, [r0]           @grande mudança acontece aqui     
+    ldrb r1, [r0]           @falar sobre ldrb     
 
     lsl   r3, r1, #13           
     ldr   r2, =0x001FE000       
@@ -272,7 +272,7 @@ pesos_loop:
     and   r3, r3, r2
     mov   r2, #1
     orr   r2, r2, r3
-    bl    mandar_sem_espera
+    bl    mandar_sem_espera @segundo readme nao ativa a flag de done e nao necessita de espera
 
     @ instrução de valor
     lsl   r3, r1, #3
@@ -280,7 +280,7 @@ pesos_loop:
     and   r3, r3, r2
     mov   r2, #2
     orr   r2, r2, r3
-    bl    mandar_instrucao
+    bl    mandar_instrucao @instruçaõ normal como as outras
 
     add  r0, r0, #2             
     add  r6, r6, #1
