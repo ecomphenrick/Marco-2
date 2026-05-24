@@ -8,6 +8,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
    - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
    - [Polling](#polling)
+   - [Endianness Big/Little](#Endianness-Big/Little)
 - [Materiais e Métodos](#materiais-e-métodos)
    - [DE1-SoC](#de1-soc)
    - [Platform Designer](#platform-designer)
@@ -98,7 +99,23 @@ No projeto que fizemos, isso acontece durante a inferência do co-processador EL
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
 
-### 
+### Endianness Big/Little 
+
+Durante o desenvolvimento do nosso driver em Assembly ARM, foi necessário saber como modificar
+com um problema de endianness dos arquivos utilizados pelo co-processador. 
+Endianness é resposavel pela ordem em que os bytes de um valor são armazenados na 
+memória. Os arquivos .bin dos pesos e bias foram gerados em big-endian, 
+enquanto o processador ARM da DE1-SoC trabalha em little-endian.
+
+Com isso, ao utilizar a instrução ldrh para ler valores de 16 bits, os 
+bytes eram interpretados na ordem errada de maneira invertida. Um exemplo foi o valor 0xFFF6, 
+que representa -10. Sem correção, o ARM interpretava o valor como 63231, 
+comprometendo os resultados da inferência.
+
+Para resolver o problema, o driver utilizou a instrução rev16, responsável 
+por inverter a ordem dos bytes, seguida de sxth, que faz a extensão de 
+sinal para 32 bits. Com isso, os dados passaram a ser interpretados 
+corretamente antes do envio ao co-processador.
 
 
 ---
