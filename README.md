@@ -98,6 +98,8 @@ No projeto que fizemos, isso acontece durante a inferência do co-processador EL
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
 
+### 
+
 
 ---
 
@@ -114,14 +116,6 @@ Como essas duas partes precisam se comunicar e trocar informações, a placa pos
 que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridge,decidido e apresentado em uma das seções tutoriais,  
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
-
-A placa conta com as seguintes especificações relevantes para o projeto:
-
-- Processador ARM Cortex-A9 dual-core (HPS)
-- FPGA Cyclone V
-- 1GB de RAM DDR3
-- Sistema operacional Linux embarcado rodando no HPS
-- Lightweight Bridge com endereço base 0xFF200000
 
 ### Platform Designer
 
@@ -184,22 +178,22 @@ A Unidade de Inferência é o módulo responsável por abrigar os MACs e os
 bancos de registradores utilizados durante o processo de cálculo. É dividida 
 em seis submodulos:
 
-**Primeira Camada** — responsável por realizar os cálculos contidos na 
+**Primeira Camada** é responsável por realizar os cálculos contidos na 
 camada oculta do ELM. Utiliza a tangente hiperbólica como função de ativação.
 
-**Banco de 128 Registradores** — armazena um conjunto de registradores 
+**Banco de 128 Registradores** armazena um conjunto de registradores 
 organizados em colunas, realizando operações de leitura e escrita.
 
-**Segunda Camada** — responsável por realizar os cálculos contidos na 
+**Segunda Camada** é responsável por realizar os cálculos contidos na 
 camada de saída. Não possui função de ativação.
 
-**Banco de 10 Registradores** — armazena o resultado dos neurônios da 
+**Banco de 10 Registradores** faz o armazenamento do resultado dos neurônios da 
 camada de saída.
 
-**Argmax** — módulo comparador que busca a posição do registrador que 
+**Argmax** é o módulo comparador que busca a posição do registrador que 
 contém o maior valor da camada de saída.
 
-**Unidade de Controle de Inferência** — responsável por organizar a execução 
+**Unidade de Controle de Inferência** responsável por organizar a execução 
 de modo que cada etapa da ELM ocorra de maneira correta.
 
 
@@ -209,16 +203,16 @@ Módulo responsável por gerenciar as operações de leitura e escrita de
 memória. É um módulo de memória genérico que implementa a criação dinâmica 
 de memórias RAM. Nesse projeto foram necessárias 4 instâncias:
 
-**mem_img** — responsável por armazenar 784 valores de 8 bits 
+**mem_img** é responsável por armazenar 784 valores de 8 bits 
 correspondentes aos pixels da imagem.
 
-**mem_win** — responsável por armazenar 100352 valores de 16 bits 
+**mem_win** é responsável por armazenar 100352 valores de 16 bits 
 correspondentes aos pesos da camada oculta.
 
-**mem_bias** — responsável por armazenar 128 valores de 16 bits 
+**mem_bias** é responsável por armazenar 128 valores de 16 bits 
 correspondentes aos bias da camada oculta.
 
-**mem_beta** — responsável por armazenar 1280 valores de 16 bits 
+**mem_beta** é responsável por armazenar 1280 valores de 16 bits 
 correspondentes aos valores de beta da camada de saída.
 
 ### Barramentos
@@ -226,28 +220,29 @@ correspondentes aos valores de beta da camada de saída.
 O co-processador possui 3 barramentos principais, dois de entrada e um de 
 saída.
 
-**Data In** — barramento de entrada de 32 bits utilizado exclusivamente para 
+**Data In** barramento de entrada de 32 bits utilizado exclusivamente para 
 o envio das instruções ao co-processador. Os 32 bits são preenchidos de 
 acordo com a instrução que será executada.
 
-**Signals** — barramento de entrada de 3 bits utilizado para enviar os sinais 
+**Signals** barramento de entrada de 3 bits utilizado para enviar os sinais 
 de controle externos ao co-processador. Cada bit possui uma utilidade:
 
-| Bit | Sinal | Descrição |
-|-----|-------|-----------|
-| 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada |
-| 1 | Clear | Limpa resquícios de uma instrução anterior com erro |
-| 2 | Reset | Reseta os registradores do co-processador | ( imagem)
+BIT 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada 
 
-**Data Out** — único barramento de saída, com largura de 32 bits, porém nem 
+BIT 1 | Clear | Limpa resquícios de uma instrução anterior com erro 
+
+BIT 2 | Reset | Reseta os registradores do co-processador 
+
+**Data Out** é o único barramento de saída, com largura de 32 bits, porém nem 
 todos os bits são utilizados:
 
-| Bits | Sinal | Descrição |
-|------|-------|-----------|
-| 0-3 | Resultado | Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência |
-| 4 | Done | Ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece |
-| 5 | Busy | Indica que uma operação ainda está sendo executada |
-| 6 | Error | Indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável | (imagem)
+BIT 0-3  vai gerar o resultado ou seja o  Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência 
+
+BIT 4 vai gera o Done ou seja ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece 
+
+BIT 5 vai busy indica que uma operação ainda está sendo executada 
+
+BIT 6 error indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável 
 
 ### ISA — Conjunto de Instruções
 
@@ -255,22 +250,22 @@ O co-processador possui 8 instruções, sendo 5 de memória e 1 de controle,
 além de 2 não utilizadas no projeto. Todas possuem opcode de 3 bits nos 
 bits 31-29 do barramento Data In.
 
-**000 — Store Image** — armazena um pixel da imagem na memória.
+**000 — Store Image**  armazena um pixel da imagem na memória.
 
-**001 — Store Weights Addr** — define o endereço onde o peso será armazenado.
+**001 — Store Weights Addr** define o endereço onde o peso será armazenado.
 
-**010 — Store Weights Value** — armazena o peso no endereço definido.
+**010 — Store Weights Value** armazena o peso no endereço definido.
 
-**011 — Store Bias** — armazena um bias na memória.
+**011 — Store Bias**  armazena um bias na memória.
 
-**100 — Store Beta** — armazena um valor de beta na memória.
+**100 — Store Beta**  armazena um valor de beta na memória.
 
-**101 — Start** — inicia o processo de inferência.
+**101 — Start** inicia o processo de inferência.
 
-**110 — Status** — não utilizada. As flags são atualizadas diretamente no 
+**110 — Status**  não utilizada. As flags são atualizadas diretamente no 
 barramento sem necessidade de solicitação.
 
-**111 — NOP** — não utilizada. Usada para inserção de bolhas em arquiteturas 
+**111 — NOP**  não utilizada. Usada para inserção de bolhas em arquiteturas 
 com pipeline.
 
 ## Metodologia
@@ -379,32 +374,30 @@ mais simples e facilitar o controle das operações realizadas durante a execuç
 
 Estão divididas em 3 grandes grupos. As funções de **inicialização** são 
 responsáveis por preparar a comunicação com o hardware — o sistema realiza 
-o acesso à Lightweight Bridge através do `/dev/mem`, faz o mapeamento dos 
+o acesso à Lightweight Bridge através do /dev/mem, faz o mapeamento dos 
 registradores em memória e configura os endereços que serão utilizados pelo 
 driver durante a execução.
 
-- `mmap_lw` — abre `/dev/mem` e mapeia o endereço `0xFF200000` da Lightweight Bridge no espaço do processo
-- `reset_coprocessador` — reseta o co-processador antes de qualquer envio de dado
+- mmap_lw vai abre /dev/mem e mapeia o endereço 0xFF200000 da Lightweight Bridge no espaço do processo
+- reset_coprocessador vai reseta o co-processador antes de qualquer envio de dado
 
 As funções de **envio de dados** são responsáveis por transmitir os dados 
 necessários para a inferência ao co-processador, como os pesos, bias, beta 
 e os pixels da imagem. Para isso o driver monta as instruções no formato 
 esperado pelo hardware e escreve os valores nos registradores correspondentes.
 
-- `store_bias` — lê `b_q.bin` e envia 128 instruções com OP=011
-- `store_beta` — lê `beta_q.bin` e envia 1280 instruções com OP=100
-- `store_imagem` — lê `imagem.bin` e envia 784 instruções com OP=000
-- `store_pesos` — lê `W_in_q.bin` e envia 100352 pares de instruções OP=001 + OP=010
+- store_bias — lê b_q.bin e envia 128 instruções com OP=011
+- store_beta — lê beta_q.bin e envia 1280 instruções com OP=100
+- store_imagem — lê imagem.bin e envia 784 instruções com OP=000
+- store_pesos — lê W_in_q.bin e envia 100352 pares de instruções OP=001 + OP=010
 
 As funções de **comunicação com o hardware** são responsáveis pelo controle 
 direto dos PIOs, realizando o envio de instruções com e sem polling, além 
 do disparo da inferência e leitura do resultado.
 
-- `send_instruction` — envia instrução no formato de 32 bits e aguarda a flag Done subir
-- `send_no_wait` — envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
-- `start_inferencia` — envia a instrução Start, aguarda Done e retorna o dígito predito
-
-### Montagem da Instrução de 32 bits
+- send_instruction faz o papel de enviar instrução no formato de 32 bits e aguarda a flag Done subir
+- send_no_wait envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
+- start_inferencia vai enviar a instrução Start, aguarda Done e retorna o dígito predito
 
 ### Montagem da Instrução de 32 bits
 
