@@ -3,14 +3,15 @@
 Este repositório contém o desenvolvimento de um coprocessador para a disciplina de Sistemas Digitais. Atualmente, o projeto encontra-se na finalização do **Marco 2**, focado na integração dos módulos fundamentais e estruturação do Datapath.
 
 - [Introdução e Definição do Problema](#introdução-e-definição-do-problema)
-- [Requisitos Principais](#requisitos-principais)
-- [Fundamentação Teórica](#fundamentação-teórica)
-   - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
-   - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
-   - [Polling](#polling)
+   - [Requisitos Principais](#requisitos-principais)
+   - [Fundamentação Teórica](#fundamentação-teórica)
+      - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
+      - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
+      - [Polling](#polling)
+      - [Endianness Big/Little](#Endianness-Big/Little)
 - [Materiais e Métodos](#materiais-e-métodos)
    - [DE1-SoC](#de1-soc)
-   - [Platform Designer](#platform-designer)
+   - [Quartus Prime](#quartus-prime)
    - [Co-processador ELM](#co-processador-elm)
       - [Descrição](#descrição)
       - [Unidade de Controle](#unidade-de-controle)
@@ -29,16 +30,14 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
 - [Testes e Resultados](#testes-e-resultados)
-- [Erros e Limitações](#erros-e-limitações)
+- [Modo de Uso](#modo-de-uso)
 - [Referências](#referências)
 ---
 
 ## Introdução e Definição do Problema
-Este projeto faz parte do Marco2, da disciplina de SD(Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
+Este projeto faz parte do Marco 2, da disciplina de SD (Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
 
 No Marco 2, o foco principal é permitir que o processador ARM consiga se comunicar corretamente com o co-processador através de MMIO (Memory-Mapped I/O), utilizando as bridges entre HPS e FPGA disponíveis na placa. Para isso, foi utilizada a ferramenta Platform Designer no Quartus Prime para integrar o hardware ao sistema do HPS.
-
-Além da parte de hardware, também foi desenvolvido um driver Linux com partes em Assembly ARM, responsável por fazer o controle e acesso aos registradores do co-processador.
 
 O principal desafio desta etapa é garantir que a comunicação entre o Linux e o co-processador funcione de forma correta e estável, permitindo o envio e leitura de dados sem erros de sincronização. Para isso, foi necessário mapear os registradores do módulo, configurar a comunicação entre HPS e FPGA e implementar as funções de acesso ao hardware.
 
@@ -46,16 +45,16 @@ Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplica
 ## Requisitos Principais
 
 ### Integração HPS↔FPGA
-Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer, permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
+Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer (Quartus), permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
 
 ### Driver Linux em Assembly ARM
-Desenvolver um driver Linux com funções em Assembly ARM para realizar o controle do co-processador e o acesso aos registradores do hardware.
+Desenvolver um driver com funções em Assembly ARM para realizar o controle do co-processador, que deve inicializar o hardware, enviar os arquivos necessários, iniciar a inferência, aguardar a finalização e ler resultados.
 
 ### Comunicação via MMIO
 Implementar a comunicação utilizando MMIO (Memory-Mapped I/O), permitindo que o Linux consiga ler e escrever dados nos registradores do co-processador através de endereços de memória.
 
 ### Controle do Co-processador
-Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado através de uma API definida com funções como open, write, read e ioctl.
+Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado.
 
 ### Leitura e Envio de Dados
 Garantir o envio correto dos dados de entrada para o co-processador e a leitura dos resultados retornados após a inferência.
@@ -73,14 +72,12 @@ em determinados endereços de memória. Dessa forma, é possível enviar dados
 para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
 hardware.
 
-No nosso projeto é de grande importância isso, por literalmente esta em toda a comunicação entre o Drive e o co-processador, no envio de Instruções, pulsos, polling e na leitura do digito esperado. 
-
 ### Drive /dev/mem e Syscalls
 O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
 da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
 os registradores do co-processador conectados pela Lightweight Bridge.
 
-Para fazer esse acesso, o programa utiliza syscalls, que são chamadas do 
+Para fazer esse acesso, o programa utiliza syscalls, que são chamadas ao 
 sistema operacional. Funções permitem abrir o /dev/mem, mapear os 
 endereços da FPGA na memória do programa e depois liberar os recursos 
 utilizados.
@@ -97,6 +94,23 @@ Polling é uma forma simples de acompanhar o funcionamento de um hardware durant
 No projeto que fizemos, isso acontece durante a inferência do co-processador ELM. Depois que o Linux envia os dados e inicia o processamento, o driver fica lendo as flags de status, como Busy e Done, para verificar se a execução ainda está acontecendo ou se já foi finalizada.
 
 Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
+
+### Endianness Big/Little 
+
+Durante o desenvolvimento do nosso driver em Assembly ARM, foi encontrado um problema com big e little endian durante a leitura de alguns arquivos. 
+Endianness é resposavel pela ordem em que os bytes de um valor são armazenados na 
+memória. Os arquivos .bin dos pesos e bias foram gerados em big-endian, 
+enquanto o processador ARM da DE1-SoC trabalha em little-endian.
+
+Com isso, ao utilizar a instrução ldrh para ler valores de 16 bits, os 
+bytes eram interpretados na ordem errada de maneira invertida. Um exemplo foi o valor 0xFFF6, 
+que representa -10. Sem correção, o ARM interpretava o valor como 63231, 
+comprometendo os resultados da inferência.
+
+Para resolver o problema, o driver utilizou a instrução rev16, responsável 
+por inverter a ordem dos bytes, seguida de sxth, que faz a extensão de 
+sinal para 32 bits. Com isso, os dados passaram a ser interpretados 
+corretamente antes do envio ao co-processador.
 
 
 ---
@@ -115,15 +129,7 @@ que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridg
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
 
-A placa conta com as seguintes especificações relevantes para o projeto:
-
-- Processador ARM Cortex-A9 dual-core (HPS)
-- FPGA Cyclone V
-- 1GB de RAM DDR3
-- Sistema operacional Linux embarcado rodando no HPS
-- Lightweight Bridge com endereço base 0xFF200000
-
-### Platform Designer
+### Platform Designer - Quartus
 
 O Platform Designer é uma ferramenta dentro do Quartus, apresentada durante 
 uma das sessões de desenvolvimento no laboratório. Com ela é possível montar 
@@ -141,9 +147,9 @@ PIO Data Out— 32 bits, entrada — recebe as flags e o resultado
 Após a conexão de tudo, o Platform Designer atribuiu automaticamente 
 endereços de memória para cada PIO:
 
-Data In = 0xFF200000
+Data In = 0xFF200010
 Signals = 0xFF200010
-Data Out = 0xFF200020
+Data Out = 0xFF200000
 
 Esses endereços são os que o driver utiliza para se comunicar com o 
 co-processador via MMIO.
@@ -161,117 +167,44 @@ tutoriais, foi bastante discutido que ele seria tratado como uma caixa preta,
 mas que nós teríamos que conectar, já que no Marco 2 isso é a base do 
 problema conectar a FPGA com o HPS.
 
-### Unidade de Controle
-
-A Unidade de Controle conecta todo o co-processador e é responsável por 
-receber as instruções e os sinais de controle externos, assim como retornar 
-as flags e os resultados das operações. A entrada de dados é realizada 
-através do barramento Data In e a saída através do Data Out.
-
-Dentro da Unidade de Controle é feita a decodificação da instrução recebida, 
-que a depender do opcode, direciona o co-processador para um estado de 
-memória ou de inferência.
-
-Um ponto importante é que durante a execução de uma instrução nenhuma outra 
-pode ser executada ao mesmo tempo é necessário aguardar o fim da execução 
-atual para que uma nova instrução possa ser lida. Caso uma instrução seja 
-enviada enquanto outra ainda está sendo executada, a flag de erro poderá 
-ser ativada.
-
-### Unidade de Inferência
-
-A Unidade de Inferência é o módulo responsável por abrigar os MACs e os 
-bancos de registradores utilizados durante o processo de cálculo. É dividida 
-em seis submodulos:
-
-**Primeira Camada** — responsável por realizar os cálculos contidos na 
-camada oculta do ELM. Utiliza a tangente hiperbólica como função de ativação.
-
-**Banco de 128 Registradores** — armazena um conjunto de registradores 
-organizados em colunas, realizando operações de leitura e escrita.
-
-**Segunda Camada** — responsável por realizar os cálculos contidos na 
-camada de saída. Não possui função de ativação.
-
-**Banco de 10 Registradores** — armazena o resultado dos neurônios da 
-camada de saída.
-
-**Argmax** — módulo comparador que busca a posição do registrador que 
-contém o maior valor da camada de saída.
-
-**Unidade de Controle de Inferência** — responsável por organizar a execução 
-de modo que cada etapa da ELM ocorra de maneira correta.
-
-
-### Load/Store Unit
-
-Módulo responsável por gerenciar as operações de leitura e escrita de 
-memória. É um módulo de memória genérico que implementa a criação dinâmica 
-de memórias RAM. Nesse projeto foram necessárias 4 instâncias:
-
-**mem_img** — responsável por armazenar 784 valores de 8 bits 
-correspondentes aos pixels da imagem.
-
-**mem_win** — responsável por armazenar 100352 valores de 16 bits 
-correspondentes aos pesos da camada oculta.
-
-**mem_bias** — responsável por armazenar 128 valores de 16 bits 
-correspondentes aos bias da camada oculta.
-
-**mem_beta** — responsável por armazenar 1280 valores de 16 bits 
-correspondentes aos valores de beta da camada de saída.
-
+Para mais detalhes sobre a implementação, ver nas referências o repositório do monitor Maike. Ainda assim, é importante para o projeto entender sobre as entradas e saídas do co-processador
 ### Barramentos
 
 O co-processador possui 3 barramentos principais, dois de entrada e um de 
 saída.
 
-**Data In** — barramento de entrada de 32 bits utilizado exclusivamente para 
+**Data In** barramento de entrada de 32 bits utilizado exclusivamente para 
 o envio das instruções ao co-processador. Os 32 bits são preenchidos de 
 acordo com a instrução que será executada.
 
-**Signals** — barramento de entrada de 3 bits utilizado para enviar os sinais 
+**Signals** barramento de entrada de 3 bits utilizado para enviar os sinais 
 de controle externos ao co-processador. Cada bit possui uma utilidade:
 
-| Bit | Sinal | Descrição |
-|-----|-------|-----------|
-| 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada |
-| 1 | Clear | Limpa resquícios de uma instrução anterior com erro |
-| 2 | Reset | Reseta os registradores do co-processador | ( imagem)
+BIT 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada 
 
-**Data Out** — único barramento de saída, com largura de 32 bits, porém nem 
+BIT 1 | Clear | Limpa resquícios de uma instrução anterior com erro 
+
+BIT 2 | Reset | Reseta os registradores do co-processador 
+
+**Data Out** é o único barramento de saída, com largura de 32 bits, porém nem 
 todos os bits são utilizados:
 
-| Bits | Sinal | Descrição |
-|------|-------|-----------|
-| 0-3 | Resultado | Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência |
-| 4 | Done | Ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece |
-| 5 | Busy | Indica que uma operação ainda está sendo executada |
-| 6 | Error | Indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável | (imagem)
+BIT 0-3  mostra o resultado ou seja o  Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência 
+
+BIT 4 apresenta o Done ou seja ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece 
+
+BIT 5 vai busy indica que uma operação ainda está sendo executada 
+
+BIT 6 error indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável 
 
 ### ISA — Conjunto de Instruções
 
 O co-processador possui 8 instruções, sendo 5 de memória e 1 de controle, 
-além de 2 não utilizadas no projeto. Todas possuem opcode de 3 bits nos 
-bits 31-29 do barramento Data In.
+além de 2 não utilizadas no projeto. 
+O formato de cada instrução varia devido a quantidade de bits destinada para cada endereço ou valor, mas no geral apresenta o seguinte formato
+sdjfadsjn colocar a imagen 
+<img width="822" height="195" alt="image" src="https://github.com/user-attachments/assets/0521e9e6-96ea-45f4-b5f7-5d7a5b677289" />
 
-**000 — Store Image** — armazena um pixel da imagem na memória.
-
-**001 — Store Weights Addr** — define o endereço onde o peso será armazenado.
-
-**010 — Store Weights Value** — armazena o peso no endereço definido.
-
-**011 — Store Bias** — armazena um bias na memória.
-
-**100 — Store Beta** — armazena um valor de beta na memória.
-
-**101 — Start** — inicia o processo de inferência.
-
-**110 — Status** — não utilizada. As flags são atualizadas diretamente no 
-barramento sem necessidade de solicitação.
-
-**111 — NOP** — não utilizada. Usada para inserção de bolhas em arquiteturas 
-com pipeline.
 
 ## Metodologia
 
@@ -379,32 +312,63 @@ mais simples e facilitar o controle das operações realizadas durante a execuç
 
 Estão divididas em 3 grandes grupos. As funções de **inicialização** são 
 responsáveis por preparar a comunicação com o hardware — o sistema realiza 
-o acesso à Lightweight Bridge através do `/dev/mem`, faz o mapeamento dos 
+o acesso à Lightweight Bridge através do /dev/mem, faz o mapeamento dos 
 registradores em memória e configura os endereços que serão utilizados pelo 
 driver durante a execução.
 
-- `mmap_lw` — abre `/dev/mem` e mapeia o endereço `0xFF200000` da Lightweight Bridge no espaço do processo
-- `reset_coprocessador` — reseta o co-processador antes de qualquer envio de dado
+- mmap_lw vai abre /dev/mem e mapeia o endereço 0xFF200000 da Lightweight Bridge no espaço do processo
+- reset_coprocessador vai reseta o co-processador antes de qualquer envio de dado
 
 As funções de **envio de dados** são responsáveis por transmitir os dados 
 necessários para a inferência ao co-processador, como os pesos, bias, beta 
 e os pixels da imagem. Para isso o driver monta as instruções no formato 
 esperado pelo hardware e escreve os valores nos registradores correspondentes.
 
-- `store_bias` — lê `b_q.bin` e envia 128 instruções com OP=011
-- `store_beta` — lê `beta_q.bin` e envia 1280 instruções com OP=100
-- `store_imagem` — lê `imagem.bin` e envia 784 instruções com OP=000
-- `store_pesos` — lê `W_in_q.bin` e envia 100352 pares de instruções OP=001 + OP=010
+- store_bias — lê b_q.bin e envia 128 instruções com OP=011
+- store_beta — lê beta_q.bin e envia 1280 instruções com OP=100
+- store_imagem — lê imagem.bin e envia 784 instruções com OP=000
+- store_pesos — lê W_in_q.bin e envia 100352 pares de instruções OP=001 + OP=010
 
 As funções de **comunicação com o hardware** são responsáveis pelo controle 
 direto dos PIOs, realizando o envio de instruções com e sem polling, além 
 do disparo da inferência e leitura do resultado.
 
-- `send_instruction` — envia instrução no formato de 32 bits e aguarda a flag Done subir
-- `send_no_wait` — envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
-- `start_inferencia` — envia a instrução Start, aguarda Done e retorna o dígito predito
+- send_instruction faz o papel de enviar instrução no formato de 32 bits e aguarda a flag Done subir
+- send_no_wait envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
+- start_inferencia vai enviar a instrução Start, aguarda Done e retorna o dígito predito
 
 ### Montagem da Instrução de 32 bits
+
+A comunicação entre o processador ARM e o co-processador do nosso projeto foi fwito implementando na 
+FPGA através de instruções de 32 bits definidas pela ISA do 
+projeto. Cada instrução possui campos específicos e diferentes, como opcode, endereço 
+e dado, ocupando posições fixas dentro desses 32 bits, como já visto 
+anteriormente.
+
+Por isso foi necessário que o software montasse manualmente cada instrução 
+antes de enviá-la ao hardware. Esse processo foi implementado em Assembly 
+ARM no arquivo (Assembly/assembly.s).
+
+As intruçoes foram contruidas com base princiapl em três operaçoes em assembly, sendo elas LSL, AND e ADD.  
+
+A instrução (LSL) é utilizada para deslocar os bits para a esquerda, 
+colocando cada informação na posição correta dentro da instrução de 32 bits.
+
+Depois do deslocamento, foi necessário aplicar máscaras utilizando (AND)
+para assegurar que o valor não ultrapassasse o tamanho do campo reservado. 
+Isso evita que bits extras acabem sobrescrevendo partes importantes da 
+instrução, como endereço ou opcode e assim garantindo o correto funcionamento.
+
+Após posicionar todos os campos corretamente, a instrução (ORR) foi 
+utilizada para juntar tudo em um único valor de 32 bits. No final desse 
+processo, o registrador contém a instrução completa pronta para ser enviada 
+ao co-processador.
+
+Como exemplo, na montagem de uma instrução Store Image, primeiro o valor 
+do pixel é deslocado para os bits correspondentes ao campo de dado. Depois 
+o endereço também é deslocado para sua posição correta. Em seguida, máscaras 
+são aplicadas para limitar os campos ao tamanho definido pela ISA. Por fim, 
+todos os campos são unidos utilizando (ORR).
 
 ### Protocolo de Envio — Enable e Polling
 
@@ -525,17 +489,12 @@ o controle ao sistema operacional. Os recursos utilizados, como o acesso ao
 
 ---
 
-## Modo de Uso
-
----
-
 ## Testes e Resultados
 
 ---
 
-## Erros e Limitações
+## Modo de Uso
 
----
 
 ---
 

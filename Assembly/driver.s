@@ -36,25 +36,25 @@ buffer_pesos:   .space 200704
 .type comeca_infer, %function
 
 mapeia_memoria:
-    push {r4, r5, r7, lr}
+    push {r4, r5, r7, lr}     @guarda o contexto na pilha
     
-    ldr  r0, =devmem            
-    mov  r1, #2                 @ O_RDWR (Conforme seu código funcional)
-    mov  r2, #0                 
-    mov  r7, #5                 
-    swi  0                      
-    mov  r4, r0                 
+    ldr  r0, =devmem          @aponta para o endereço da string "/dev/mem"          
+    mov  r1, #2               @parametro O_RDWR (leitura e escrita)
+    mov  r2, #0               @nao usado (parametro)          
+    mov  r7, #5               @syscall open          
+    swi  0                    @Passa para o linux que devolve o FD em r0          
+    mov  r4, r0               @r4 = fd, r0 vai ser perdido (e r4 vira arg pro mmap)          
 
-    mov  r0, #0                 
-    mov  r1, #0x1000            
-    mov  r2, #3                 
-    mov  r3, #1                 
-    ldr  r5, =LW_BASE_PAGE      
-    mov  r7, #192               
-    swi  0                      
+    mov  r0, #0               @endereço 0 pro kernel escolher onde mapear  
+    mov  r1, #0x1000          @tamanho de 4096 bytes   
+    mov  r2, #3               @permissoes PROT_READ e PROT_WRITE  
+    mov  r3, #1               @flag MAP_SHARED (escreve direto no hardware)  
+    ldr  r5, =LW_BASE_PAGE    @offset com o endereço fisico base  
+    mov  r7, #192             @syscall mmap2  
+    swi  0                    @r0 recebe o endereço virtual mapeado  
     
-    pop  {r4, r5, r7, lr}
-    bx   lr
+    pop  {r4, r5, r7, lr}     @tira pilha
+    bx   lr                   @volta para a função que chamou
 
 reset_coprocessador:
     push {r10, lr}
@@ -70,7 +70,7 @@ reset_coprocessador:
 
 
 store_bias:
-    push {r4, r5, r6, r7, r8, r9, r10, lr}
+    push {r4, r5, r6, r7, r8, r9, r10, lr}  
     mov  r10, r0                @ r0 recebe a base virtual do C. Salva em r10.
     
     mov  r0, r1                 @ aponta para o endereço da string
