@@ -30,7 +30,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
 - [Testes e Resultados](#testes-e-resultados)
-- [Erros e Limitações](#erros-e-limitações)
+- [Modo de Uso](#modo-de-uso)
 - [Referências](#referências)
 ---
 
@@ -568,17 +568,12 @@ o controle ao sistema operacional. Os recursos utilizados, como o acesso ao
 
 ---
 
-## Modo de Uso
-
----
-
 ## Testes e Resultados
 
 ---
 
-## Erros e Limitações
+## Modo de Uso
 
----
 
 ---
 
