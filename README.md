@@ -3,15 +3,15 @@
 Este repositório contém o desenvolvimento de um coprocessador para a disciplina de Sistemas Digitais. Atualmente, o projeto encontra-se na finalização do **Marco 2**, focado na integração dos módulos fundamentais e estruturação do Datapath.
 
 - [Introdução e Definição do Problema](#introdução-e-definição-do-problema)
-- [Requisitos Principais](#requisitos-principais)
-- [Fundamentação Teórica](#fundamentação-teórica)
-   - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
-   - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
-   - [Polling](#polling)
-   - [Endianness Big/Little](#Endianness-Big/Little)
+   - [Requisitos Principais](#requisitos-principais)
+   - [Fundamentação Teórica](#fundamentação-teórica)
+      - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
+      - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
+      - [Polling](#polling)
+      - [Endianness Big/Little](#Endianness-Big/Little)
 - [Materiais e Métodos](#materiais-e-métodos)
    - [DE1-SoC](#de1-soc)
-   - [Platform Designer](#platform-designer)
+   - [Quartus Prime](#quartus-prime)
    - [Co-processador ELM](#co-processador-elm)
       - [Descrição](#descrição)
       - [Unidade de Controle](#unidade-de-controle)
@@ -35,11 +35,9 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 ---
 
 ## Introdução e Definição do Problema
-Este projeto faz parte do Marco2, da disciplina de SD(Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
+Este projeto faz parte do Marco 2, da disciplina de SD (Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
 
 No Marco 2, o foco principal é permitir que o processador ARM consiga se comunicar corretamente com o co-processador através de MMIO (Memory-Mapped I/O), utilizando as bridges entre HPS e FPGA disponíveis na placa. Para isso, foi utilizada a ferramenta Platform Designer no Quartus Prime para integrar o hardware ao sistema do HPS.
-
-Além da parte de hardware, também foi desenvolvido um driver Linux com partes em Assembly ARM, responsável por fazer o controle e acesso aos registradores do co-processador.
 
 O principal desafio desta etapa é garantir que a comunicação entre o Linux e o co-processador funcione de forma correta e estável, permitindo o envio e leitura de dados sem erros de sincronização. Para isso, foi necessário mapear os registradores do módulo, configurar a comunicação entre HPS e FPGA e implementar as funções de acesso ao hardware.
 
@@ -47,16 +45,16 @@ Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplica
 ## Requisitos Principais
 
 ### Integração HPS↔FPGA
-Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer, permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
+Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer (Quartus), permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
 
 ### Driver Linux em Assembly ARM
-Desenvolver um driver Linux com funções em Assembly ARM para realizar o controle do co-processador e o acesso aos registradores do hardware.
+Desenvolver um driver com funções em Assembly ARM para realizar o controle do co-processador, que deve inicializar o hardware, enviar os arquivos necessários, iniciar a inferência, aguardar a finalização e ler resultados.
 
 ### Comunicação via MMIO
 Implementar a comunicação utilizando MMIO (Memory-Mapped I/O), permitindo que o Linux consiga ler e escrever dados nos registradores do co-processador através de endereços de memória.
 
 ### Controle do Co-processador
-Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado através de uma API definida com funções como open, write, read e ioctl.
+Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado.
 
 ### Leitura e Envio de Dados
 Garantir o envio correto dos dados de entrada para o co-processador e a leitura dos resultados retornados após a inferência.
@@ -74,14 +72,12 @@ em determinados endereços de memória. Dessa forma, é possível enviar dados
 para a FPGA, iniciar a inferência e depois ler o resultado retornado pelo 
 hardware.
 
-No nosso projeto é de grande importância isso, por literalmente esta em toda a comunicação entre o Drive e o co-processador, no envio de Instruções, pulsos, polling e na leitura do digito esperado. 
-
 ### Drive /dev/mem e Syscalls
 O /dev/mem é um recurso do Linux que permite acessar diretamente regiões 
 da memória física do sistema. No nosso projeto, ele foi utilizado para acessar 
 os registradores do co-processador conectados pela Lightweight Bridge.
 
-Para fazer esse acesso, o programa utiliza syscalls, que são chamadas do 
+Para fazer esse acesso, o programa utiliza syscalls, que são chamadas ao 
 sistema operacional. Funções permitem abrir o /dev/mem, mapear os 
 endereços da FPGA na memória do programa e depois liberar os recursos 
 utilizados.
@@ -101,8 +97,7 @@ Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela es
 
 ### Endianness Big/Little 
 
-Durante o desenvolvimento do nosso driver em Assembly ARM, foi necessário saber como modificar
-com um problema de endianness dos arquivos utilizados pelo co-processador. 
+Durante o desenvolvimento do nosso driver em Assembly ARM, foi encontrado um problema com big e little endian durante a leitura de alguns arquivos. 
 Endianness é resposavel pela ordem em que os bytes de um valor são armazenados na 
 memória. Os arquivos .bin dos pesos e bias foram gerados em big-endian, 
 enquanto o processador ARM da DE1-SoC trabalha em little-endian.
@@ -134,7 +129,7 @@ que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridg
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
 
-### Platform Designer
+### Platform Designer - Quartus
 
 O Platform Designer é uma ferramenta dentro do Quartus, apresentada durante 
 uma das sessões de desenvolvimento no laboratório. Com ela é possível montar 
@@ -152,9 +147,9 @@ PIO Data Out— 32 bits, entrada — recebe as flags e o resultado
 Após a conexão de tudo, o Platform Designer atribuiu automaticamente 
 endereços de memória para cada PIO:
 
-Data In = 0xFF200000
+Data In = 0xFF200010
 Signals = 0xFF200010
-Data Out = 0xFF200020
+Data Out = 0xFF200000
 
 Esses endereços são os que o driver utiliza para se comunicar com o 
 co-processador via MMIO.
@@ -172,66 +167,7 @@ tutoriais, foi bastante discutido que ele seria tratado como uma caixa preta,
 mas que nós teríamos que conectar, já que no Marco 2 isso é a base do 
 problema conectar a FPGA com o HPS.
 
-### Unidade de Controle
-
-A Unidade de Controle conecta todo o co-processador e é responsável por 
-receber as instruções e os sinais de controle externos, assim como retornar 
-as flags e os resultados das operações. A entrada de dados é realizada 
-através do barramento Data In e a saída através do Data Out.
-
-Dentro da Unidade de Controle é feita a decodificação da instrução recebida, 
-que a depender do opcode, direciona o co-processador para um estado de 
-memória ou de inferência.
-
-Um ponto importante é que durante a execução de uma instrução nenhuma outra 
-pode ser executada ao mesmo tempo é necessário aguardar o fim da execução 
-atual para que uma nova instrução possa ser lida. Caso uma instrução seja 
-enviada enquanto outra ainda está sendo executada, a flag de erro poderá 
-ser ativada.
-
-### Unidade de Inferência
-
-A Unidade de Inferência é o módulo responsável por abrigar os MACs e os 
-bancos de registradores utilizados durante o processo de cálculo. É dividida 
-em seis submodulos:
-
-**Primeira Camada** é responsável por realizar os cálculos contidos na 
-camada oculta do ELM. Utiliza a tangente hiperbólica como função de ativação.
-
-**Banco de 128 Registradores** armazena um conjunto de registradores 
-organizados em colunas, realizando operações de leitura e escrita.
-
-**Segunda Camada** é responsável por realizar os cálculos contidos na 
-camada de saída. Não possui função de ativação.
-
-**Banco de 10 Registradores** faz o armazenamento do resultado dos neurônios da 
-camada de saída.
-
-**Argmax** é o módulo comparador que busca a posição do registrador que 
-contém o maior valor da camada de saída.
-
-**Unidade de Controle de Inferência** responsável por organizar a execução 
-de modo que cada etapa da ELM ocorra de maneira correta.
-
-
-### Load/Store Unit
-
-Módulo responsável por gerenciar as operações de leitura e escrita de 
-memória. É um módulo de memória genérico que implementa a criação dinâmica 
-de memórias RAM. Nesse projeto foram necessárias 4 instâncias:
-
-**mem_img** é responsável por armazenar 784 valores de 8 bits 
-correspondentes aos pixels da imagem.
-
-**mem_win** é responsável por armazenar 100352 valores de 16 bits 
-correspondentes aos pesos da camada oculta.
-
-**mem_bias** é responsável por armazenar 128 valores de 16 bits 
-correspondentes aos bias da camada oculta.
-
-**mem_beta** é responsável por armazenar 1280 valores de 16 bits 
-correspondentes aos valores de beta da camada de saída.
-
+Para mais detalhes sobre a implementação, ver nas referências o repositório do monitor Maike. Ainda assim, é importante para o projeto entender sobre as entradas e saídas do co-processador
 ### Barramentos
 
 O co-processador possui 3 barramentos principais, dois de entrada e um de 
@@ -253,9 +189,9 @@ BIT 2 | Reset | Reseta os registradores do co-processador
 **Data Out** é o único barramento de saída, com largura de 32 bits, porém nem 
 todos os bits são utilizados:
 
-BIT 0-3  vai gerar o resultado ou seja o  Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência 
+BIT 0-3  mostra o resultado ou seja o  Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência 
 
-BIT 4 vai gera o Done ou seja ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece 
+BIT 4 apresenta o Done ou seja ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece 
 
 BIT 5 vai busy indica que uma operação ainda está sendo executada 
 
@@ -264,26 +200,11 @@ BIT 6 error indica que a instrução anterior não foi executada corretamente. M
 ### ISA — Conjunto de Instruções
 
 O co-processador possui 8 instruções, sendo 5 de memória e 1 de controle, 
-além de 2 não utilizadas no projeto. Todas possuem opcode de 3 bits nos 
-bits 31-29 do barramento Data In.
+além de 2 não utilizadas no projeto. 
+O formato de cada instrução varia devido a quantidade de bits destinada para cada endereço ou valor, mas no geral apresenta o seguinte formato
+sdjfadsjn colocar a imagen 
+<img width="822" height="195" alt="image" src="https://github.com/user-attachments/assets/0521e9e6-96ea-45f4-b5f7-5d7a5b677289" />
 
-**000 — Store Image**  armazena um pixel da imagem na memória.
-
-**001 — Store Weights Addr** define o endereço onde o peso será armazenado.
-
-**010 — Store Weights Value** armazena o peso no endereço definido.
-
-**011 — Store Bias**  armazena um bias na memória.
-
-**100 — Store Beta**  armazena um valor de beta na memória.
-
-**101 — Start** inicia o processo de inferência.
-
-**110 — Status**  não utilizada. As flags são atualizadas diretamente no 
-barramento sem necessidade de solicitação.
-
-**111 — NOP**  não utilizada. Usada para inserção de bolhas em arquiteturas 
-com pipeline.
 
 ## Metodologia
 
