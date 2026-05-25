@@ -355,7 +355,7 @@ hardware sem necessidade de interrupções.
 Existe ainda um caso especial relacionado à instrução Store Weights Addr 
 (OP=001). Segundo a documentação do co-processador, essa operação leva 
 apenas alguns ciclos de clock e não ativa o sinal Done. Por esse motivo 
-ela utiliza a função send_no_wait, que realiza apenas o pulso de Enable 
+ela utiliza a função mandar_sem_espera, que realiza apenas o pulso de Enable 
 sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
 o programa permaneceria travado esperando um Done que nunca seria ativado.
 
@@ -401,26 +401,30 @@ Outro teste importante realizado, foi o de imprimir os 32 bits que seriam mandad
 
 Dando continuidado nos testes, fizemos o código equivalente em C para testar a inferência e conexões via PIO's.
 
-Por fim, fizemos testes com a aplicação final em C sem mandar alguns arquivos. E com isso chegamos a conclusão que o reset não limpa as memórias (confirmado pelo projetista) e que o driver influencia diretamente no resultado da inferência (em alguns casos todos os valores sairam errados, em outras a acurácia foi de cerca de 30%)
+Por fim, fizemos testes com a aplicação final em C sem mandar alguns arquivos. E com isso chegamos a conclusão que o reset não limpa as memórias (confirmado pelo projetista) e que o driver influencia diretamente no resultado da inferência, visto que, caso alguma função seja apagada a inferência sai errada (em alguns casos todos os valores sairam errados, em outras a acurácia foi de cerca de 30%)
 
 # Resultados e Melhorias
 
  O marco 2 foi concluido de forma completa e satisfatória, apresentando um driver funcional, uma aplicação em C para testes automatizados e acurácia de mais de 80% (Normal para o co-processador apresentado). Auxiliando diretamente no aprendizado dos alunos envolvidos.
+ 
  Entretanto, algumas melhorias futuras podem ser mencionadas. Principalmente o excesso de syscalls dentro do driver (apresenta fragilidade de segurança) e uma aplicação ainda mais funcional em C
 
 
 # Modo de Uso
 **Passo 1:**
- Faça download do projeto e via ssh transfira a pasta "Assembly para a placa".
+ Faça download do projeto e via ssh transfira a pasta "Assembly" para a placa.
  
 **Passo 2:**
- Compilar projeto no quartus e programar .sof na placa.
+ Abra a pasta "Coprocessador" no Quartus, compile o projeto e programe o .sof na placa.
 
 **Passo 3:**
  No terminal da placa, na pasta do projeto, escrever make build (para gerar o executável).
  
 **Passo 4:**
  Ainda no terminal, escrever e mandar make run para rodar o projeto.
+
+**Passo 5:**
+ Veja 100 inferências com 100 digitos rodando e compare os resultados.
 
 # Referências
 
