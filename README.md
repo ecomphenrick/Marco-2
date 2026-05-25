@@ -416,12 +416,15 @@ Leitura do resultado.
 
 ## Modo de Uso
 **Passo 1:**
+ Faça download do projeto e via ssh transfira a pasta "Assembly para a placa".
+ 
+**Passo 2:**
  Compilar projeto no quartus e programar .sof na placa.
 
-**Passo 2:**
+**Passo 3:**
  No terminal da placa, na pasta do projeto, escrever make build (para gerar o executável).
  
-**Passo 3:**
+**Passo 4:**
  Ainda no terminal, escrever e mandar make run para rodar o projeto.
  
 ---
@@ -432,6 +435,10 @@ MATOS, Kamilly. coprocessador-de-imagens-pbl-sd-2. Versão/Branch principal. Git
 
 SILVA, Felipe. SistemasDigitais_Problema2. Versão/Branch principal. GitHub, 2026. Disponível em: https://github.com/Felipeacs05/SistemasDigitais_Problema2. Acesso em: 24 maio 2026.
 
+Oliveira, Maike. Problema_SD_2026_1. Versão/Branch principal. GitHub, 2026. Disponível em: https://github.com/DestinyWolf/Problema_SD_2026_1. Acesso em: 24 maio 2026.
+
 ARM DEVELOPER. Arm Documentation. Disponível em: https://developer.arm.com/documentation. Acesso em: 24 maio 2026.
 
 TERASIC TECHNOLOGIES. Terasic Inc.: Expertise in FPGA/ASIC Design. Disponível em: http://www.terasic.com.tw/. Acesso em: 24 maio 2026.
+
+As imagens do pseudocodigo e das syscalls foram feitas em Inteligência Artificial.
