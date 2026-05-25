@@ -234,11 +234,7 @@ Detalharei na sequência como nosso grupo desenvolveu a solução.
 </p>
 
 Ou seja, um vetor com o conteúdo do arquivo e um loop percorrendo as posições, em que a posição serviria de endereço e o valor seria o dado, por fim, colocaria o opcode e finalizaria a montagem da instrução.
-Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importantes: Sycall e buffer.
-
-<p align="center">
-  <img src="images/syscalls.jpeg" alt="syscalls" width="500">
-</p>
+Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importantes: Sycall e buffer - detalhados posteriormente.
 
  **Passo 4:**
   Após a conclusão de que esse era o caminho, iniciamos o desenvolvimento em assembly para a função store_bias (que seria a mais simples de implementar). 
@@ -246,7 +242,7 @@ Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importan
   Ainda nessa etapa, com estratégias lógicas (shift's, and's, or's), imprimimos o formato da instrução seguindo o padrão estabelecido.
   
 **Passo 5:**
-Posteriormente, montamos o loop e consequentemente todas as outras funções de armazenamento de dados.
+Posteriormente, montamos o loop e consequentemente todas as outras funções de armazenamento de dados (atenção as funções de armazenar imagem e peso, que apesar de apresentarem a mesma solução, possuem especifidades em relação ao tamanho do dado ou montagem da instrução).
 Com auxílio de projetos de outros colegas, montamos também a função mapeia memória, as funções de envio e as de polling. Em tese, tudo pronto, mas como testar?
 Esbarramos nessa etapa, visto que o co-processador base não tinha um modo de verificação da leitura e armazenamento dos dados.
 A solução? Seguindo conselhos de colegas e monitores, montamos um código em C correspondente ao nosso para testar a inferência, se ela saísse correta, nosso projeto estaria funcional.
@@ -265,26 +261,6 @@ Lightweight Bridge no espaço de memória do processo. Depois disso, as instruç
 as mandam ao co-processador ELM na FPGA. O resultado,o dígito esperado
 entre 0 e 9, e é retornado pelo barramento Data Out e mostrado no terminal. 
 
-### Escolha do /dev/mem
-
-O /dev/mem foi escolhido para fazer a conexão entre a FPGA e o HPS, 
-pois ele permite o acesso direto aos registradores mapeados na memória. 
-Com isso é possível mapear a Lightweight Bridge diretamente do espaço do 
-usuário e controlar os registradores do hardware sem precisar desenvolver 
-um driver de kernel.
-
-Foi escolhido também, discutido e apresentado em uma das sessões tutoriais 
-por todos os grupos, pela facilidade por conta de ser compatível com 
-Assembly puro. A outra opção seria o módulo de kernel, que tem função 
-parecida, mas foi descartada pois exigiria obrigatoriamente C no esqueleto 
-de registro, o que contradiz o requisito do Marco 2 de desenvolver o driver 
-em Assembly ARM.
-
-Mais à frente, nos testes e depuração, essa escolha se mostrou ainda mais 
-importante. O /dev/mem é mais rápido em testes e correções, além de não 
-encerrar o sistema inteiro em caso de erro o que aconteceria se fosse 
-utilizado um módulo de kernel.
-
 
 ### Funções Implementadas
 
@@ -299,8 +275,8 @@ o acesso à Lightweight Bridge através do /dev/mem, faz o mapeamento dos
 registradores em memória e configura os endereços que serão utilizados pelo 
 driver durante a execução.
 
-- mmap_lw vai abre /dev/mem e mapeia o endereço 0xFF200000 da Lightweight Bridge no espaço do processo
-- reset_coprocessador vai reseta o co-processador antes de qualquer envio de dado
+- mapeia_memoria abre /dev/mem e mapeia o endereço 0xFF200000 da Lightweight Bridge no espaço do processo
+- reset_coprocessador reseta o co-processador antes de qualquer envio de dado (mas não apaga dados que ja estão na memória, isso vai ser importante e mais detalhado nos testes)
 
 As funções de **envio de dados** são responsáveis por transmitir os dados 
 necessários para a inferência ao co-processador, como os pesos, bias, beta 
@@ -316,9 +292,35 @@ As funções de **comunicação com o hardware** são responsáveis pelo control
 direto dos PIOs, realizando o envio de instruções com e sem polling, além 
 do disparo da inferência e leitura do resultado.
 
-- send_instruction faz o papel de enviar instrução no formato de 32 bits e aguarda a flag Done subir
-- send_no_wait envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
-- start_inferencia vai enviar a instrução Start, aguarda Done e retorna o dígito predito
+- manda_instrução faz o papel de enviar instrução no formato de 32 bits e aguarda a flag Done subir
+- manda_sem_espera envia instrução sem aguardar Done, usada exclusivamente para Store Weights Addr
+- comeca_infer vai enviar a instrução Start, aguarda Done e retorna o dígito predito
+
+### Leitura dos Arquivos .bin
+
+Antes de enviar os dados para o co-processador, no nosso projeto o programa precisa ler os 
+arquivos .bin usando syscalls do Linux em Assembly ARM. O processo segue 
+sempre três etapas: abrir o arquivo, ler os dados para um buffer na RAM e 
+depois fechar o arquivo.
+
+<p align="center">
+  <img src="images/syscalls.jpeg" alt="syscalls" width="500">
+</p>
+
+O open retorna um identificador chamado file descriptor, que é usado nas 
+próximas operações. Em seguida, o read copia os bytes do arquivo para 
+buffers declarados na memória do programa. Depois da leitura, o arquivo é 
+fechado com close, liberando o recurso no sistema.
+
+Cada arquivo possui um buffer próprio na RAM. Os arquivos de bias, beta e 
+imagem são pequenos e podem ser carregados completamente. 
+
+Após a leitura, alguns valores ainda precisam ser convertidos antes de serem 
+usados. Bias, beta e pesos são números de 16 bits com sinal, então o código 
+inverte a ordem dos bytes (rev16) e faz extensão de sinal para 32 bits 
+(sxth), já que os arquivos estão em big-endian e o ARM usa little-endian. 
+A imagem não precisa desse tratamento porque cada pixel ocupa apenas 1 byte 
+sem sinal.
 
 ### Montagem da Instrução de 32 bits
 
@@ -330,9 +332,9 @@ anteriormente.
 
 Por isso foi necessário que o software montasse manualmente cada instrução 
 antes de enviá-la ao hardware. Esse processo foi implementado em Assembly 
-ARM no arquivo (Assembly/assembly.s).
+ARM no arquivo (Assembly/driver.s).
 
-As intruçoes foram contruidas com base princiapl em três operaçoes em assembly, sendo elas LSL, AND e ADD.  
+As intruçoes foram contruidas com base princiapl em três operaçoes em assembly, sendo elas LSL, AND e ORR.  
 
 A instrução (LSL) é utilizada para deslocar os bits para a esquerda, 
 colocando cada informação na posição correta dentro da instrução de 32 bits.
@@ -388,87 +390,23 @@ ela utiliza a função send_no_wait, que realiza apenas o pulso de Enable
 sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
 o programa permaneceria travado esperando um Done que nunca seria ativado.
 
-### Leitura dos Arquivos .bin
-
-Antes de enviar os dados para o co-processador, no nosso projeto o programa precisa ler os 
-arquivos .bin usando syscalls do Linux em Assembly ARM. O processo segue 
-sempre três etapas: abrir o arquivo, ler os dados para um buffer na RAM e 
-depois fechar o arquivo.
-
-O open retorna um identificador chamado file descriptor, que é usado nas 
-próximas operações. Em seguida, o read copia os bytes do arquivo para 
-buffers declarados na memória do programa. Depois da leitura, o arquivo é 
-fechado com close, liberando o recurso no sistema.
-
-Cada arquivo possui um buffer próprio na RAM. Os arquivos de bias, beta e 
-imagem são pequenos e podem ser carregados completamente. Já o arquivo de 
-pesos (W_in_q.bin) é muito maior, então o programa lê apenas 2 bytes por 
-vez dentro do loop de envio, evitando ocupar muita memória.
-
-
-
-![Tabela de arquivos e buffers](imagens/tabela_arquivos.png)
-
-
-
-Após a leitura, alguns valores ainda precisam ser convertidos antes de serem 
-usados. Bias, beta e pesos são números de 16 bits com sinal, então o código 
-inverte a ordem dos bytes (rev16) e faz extensão de sinal para 32 bits 
-(sxth), já que os arquivos estão em big-endian e o ARM usa little-endian. 
-A imagem não precisa desse tratamento porque cada pixel ocupa apenas 1 byte 
-sem sinal.
-
 ### Fluxo de Execução
+Como nesse marco o objetivo era conectar o hardware com uma aplicação simples, o fluxo é sequencial:
 
-A primeira etapa do programa é fazer o mapeamento dos registradores da FPGA 
-na memória do processador. Isso é feito usando /dev/mem e a função mmap(), 
-permitindo que o software consiga acessar diretamente os PIOs do hardware. 
-Depois desse mapeamento, o processador passa a conseguir ler e escrever nos 
-registradores do co-processador como se fossem posições normais de memória.
+**Passo 1:**
+Mapeamento da memória.
 
-A segunda etapa é o reset do co-processador para que não exista estado 
-acumulativo de execuções anteriores que possa atrapalhar, tanto nos 
-registradores como na memória interna. Isso é realizado a partir do sinal 
-de reset, que é ativado e depois desativado, deixando o hardware pronto para 
-receber novos dados.
+**Passo 2:**
+Reset do co-processador.
 
-O terceiro passo é o carregamento dos valores de bias para dentro do 
-co-processador, com a leitura do arquivo b_q.bin, percorrendo os valores 
-e enviando cada um para a memória interna da FPGA pelos PIOs.
+**Passo 3:**
+Funções de armazenamento e envio de instruções.
 
-O quarto passo é parecido com o terceiro, mas agora com o arquivo beta. O 
-software abre o arquivo beta_q.bin, lê os dados e envia cada valor para 
-a memória correspondente no hardware.
+**Passo 4:**
+Inicio da inferência.
 
-O quinto passo também é de envio, mas agora da imagem. Na store_imagem
-acontece a leitura do arquivo imagem.bin e o envio dos pixels para a 
-memória de imagem da FPGA. Como os pixels têm apenas 1 byte, não há 
-necessidade de tratamento de sinal nessa etapa.
-
-O sexto passo é a etapa mais pesada, por conta do carregamento de todos os 
-pesos da rede neural. O software lê o arquivo W_in_q.bin aos poucos e 
-envia os dados para a memória interna do co-processador. Ao contrário do 
-quinto passo, aqui há necessidade de tratamento para cada peso com correções 
-de sinal antes do envio.
-
-O sétimo passo é quando, com todos os dados carregados, o programa dá o 
-comando para iniciar a inferência. O co-processador executa as operações da 
-rede neural internamente, realizando os cálculos das camadas e determinando 
-qual saída possui o maior valor. Enquanto isso o processador fica aguardando 
-o sinal de conclusão (Done).
-
-O oitavo passo é quando a inferência termina. O resultado recebido possui 
-32 bits, mas apenas os 4 bits menos significativos representam o dígito 
-previsto. O programa então aplica uma operação lógica (AND 0xF) para 
-remover os outros bits e manter somente o valor final da classificação.
-
-O nono passo é quando, após receber o resultado, o programa converte o 
-número para caractere ASCII e imprime o valor no terminal. É a parte em que 
-o dígito reconhecido pela rede neural aparece para a visualização do usuário.
-
-O décimo e último passo é quando o programa encerra sua execução e devolve 
-o controle ao sistema operacional. Os recursos utilizados, como o acesso ao 
-/dev/mem, são liberados pelo Linux.
+**Passo 5:**
+Leitura do resultado.
 
 ---
 
@@ -477,8 +415,23 @@ o controle ao sistema operacional. Os recursos utilizados, como o acesso ao
 ---
 
 ## Modo de Uso
+**Passo 1:**
+ Compilar projeto no quartus e programar .sof na placa.
 
-
+**Passo 2:**
+ No terminal da placa, na pasta do projeto, escrever make build (para gerar o executável).
+ 
+**Passo 3:**
+ Ainda no terminal, escrever e mandar make run para rodar o projeto.
+ 
 ---
 
 ## Referências
+
+MATOS, Kamilly. coprocessador-de-imagens-pbl-sd-2. Versão/Branch principal. GitHub, 2026. Disponível em: https://github.com/kamillymatos/coprocessador-de-imagens-pbl-sd-2. Acesso em: 24 maio 2026.
+
+SILVA, Felipe. SistemasDigitais_Problema2. Versão/Branch principal. GitHub, 2026. Disponível em: https://github.com/Felipeacs05/SistemasDigitais_Problema2. Acesso em: 24 maio 2026.
+
+ARM DEVELOPER. Arm Documentation. Disponível em: https://developer.arm.com/documentation. Acesso em: 24 maio 2026.
+
+TERASIC TECHNOLOGIES. Terasic Inc.: Expertise in FPGA/ASIC Design. Disponível em: http://www.terasic.com.tw/. Acesso em: 24 maio 2026.
