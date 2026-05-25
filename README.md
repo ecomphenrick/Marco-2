@@ -10,15 +10,13 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
       - [Polling](#polling)
       - [Endianness Big/Little](#Endianness-Big/Little)
 - [Materiais e Métodos](#materiais-e-métodos)
-   - [DE1-SoC](#de1-soc)
-   - [Quartus Prime](#quartus-prime)
-   - [Co-processador ELM](#co-processador-elm)
-      - [Descrição](#descrição)
-      - [Unidade de Controle](#unidade-de-controle)
-      - [Unidade de Inferência](#unidade-de-inferência)
-      - [Load/Store Unit](#loadstore-unit)
-      - [Barramentos](#barramentos)
-      - [ISA — Conjunto de Instruções](#isa--conjunto-de-instruções)
+   - [Materiais](#materiais) 
+      - [DE1-SoC](#de1-soc)
+      - [Quartus Prime](#quartus-prime)
+      - [Co-processador ELM](#co-processador-elm)
+         - [Descrição](#descrição)
+         - [Barramentos](#barramentos)
+         - [ISA — Conjunto de Instruções](#isa--conjunto-de-instruções)
 - [Metodologia](#metodologia)
 - [Descrição da Solução](#descrição-da-solução)
    - [Arquitetura Geral](#arquitetura-geral)
@@ -34,7 +32,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 - [Referências](#referências)
 ---
 
-## Introdução e Definição do Problema
+# Introdução e Definição do Problema
 Este projeto faz parte do Marco 2, da disciplina de SD (Sistemas Digitais) - TEC499, que tem como objetivo realizar a integração entre o co-processador ELM implementado na FPGA(do marco1, projetado por um monitor da referente materia) e o sistema Linux executando no HPS da placa DE1-SoC. O co-processador, desenvolvido em Verilog no Marco 1, é responsável por executar a inferência do modelo ELM diretamente em hardware.
 
 No Marco 2, o foco principal é permitir que o processador ARM consiga se comunicar corretamente com o co-processador através de MMIO (Memory-Mapped I/O), utilizando as bridges entre HPS e FPGA disponíveis na placa. Para isso, foi utilizada a ferramenta Platform Designer no Quartus Prime para integrar o hardware ao sistema do HPS.
@@ -42,6 +40,7 @@ No Marco 2, o foco principal é permitir que o processador ARM consiga se comuni
 O principal desafio desta etapa é garantir que a comunicação entre o Linux e o co-processador funcione de forma correta e estável, permitindo o envio e leitura de dados sem erros de sincronização. Para isso, foi necessário mapear os registradores do módulo, configurar a comunicação entre HPS e FPGA e implementar as funções de acesso ao hardware.
 
 Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplicação em linguagem C consiga utilizar o co-processador através do driver desenvolvido.
+
 ## Requisitos Principais
 
 ### Integração HPS↔FPGA
@@ -63,6 +62,7 @@ Garantir o envio correto dos dados de entrada para o co-processador e a leitura 
 Realizar testes para verificar se a comunicação entre HPS e FPGA está funcionando corretamente e de forma estável durante várias execuções.
 
 ## Fundamentação Teórica
+Para a elaboração do Driver, alguns conceitos importantes precisam ser mencionados:
 
 ### MMIO (Memory-Mapped I/O)
 MMIO (Memory-Mapped I/O) é uma forma de comunicação onde os registradores 
@@ -116,7 +116,9 @@ corretamente antes do envio ao co-processador.
 ---
 
 
-## Materiais e Métodos
+# Materiais e Métodos
+
+## Materiais
 
 ### DE1-SoC
 
@@ -147,7 +149,7 @@ PIO Data Out— 32 bits, entrada — recebe as flags e o resultado
 Após a conexão de tudo, o Platform Designer atribuiu automaticamente 
 endereços de memória para cada PIO:
 
-Data In = 0xFF200010
+Data In = 0xFF200020
 Signals = 0xFF200010
 Data Out = 0xFF200000
 
@@ -156,7 +158,7 @@ co-processador via MMIO.
 
 ### Co-processador ELM
 
-### Descrição
+#### Descrição
 
 O co-processador foi cedido aos grupos e foi implementado pelo monitor da 
 disciplina, Maike. Com ele foi entregue uma descrição detalhada e formatada 
@@ -168,7 +170,7 @@ mas que nós teríamos que conectar, já que no Marco 2 isso é a base do
 problema conectar a FPGA com o HPS.
 
 Para mais detalhes sobre a implementação, ver nas referências o repositório do monitor Maike. Ainda assim, é importante para o projeto entender sobre as entradas e saídas do co-processador
-### Barramentos
+#### Barramentos
 
 O co-processador possui 3 barramentos principais, dois de entrada e um de 
 saída.
@@ -197,79 +199,60 @@ BIT 5 vai busy indica que uma operação ainda está sendo executada
 
 BIT 6 error indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável 
 
-### ISA — Conjunto de Instruções
+#### ISA — Conjunto de Instruções
 
 O co-processador possui 8 instruções, sendo 5 de memória e 1 de controle, 
 além de 2 não utilizadas no projeto. 
-O formato de cada instrução varia devido a quantidade de bits destinada para cada endereço ou valor, mas no geral apresenta o seguinte formato
-sdjfadsjn colocar a imagen 
-<img width="822" height="195" alt="image" src="https://github.com/user-attachments/assets/0521e9e6-96ea-45f4-b5f7-5d7a5b677289" />
+O formato de cada instrução varia devido a quantidade de bits destinada para cada endereço ou valor, mas no geral apresenta o seguinte formato:
+
+<p align="center">
+  <img src="images/instrucao_bias.png" alt="Instrução Bias" width="500">
+</p>
 
 
 ## Metodologia
 
 O desenvolvimento do Marco 2 foi realizado seguindo a metodologia PBL, 
-avançando de forma crescente ao longo das sessões tutoriais, com cada seção com metas, ideias e fatos que auxiliaram de forma coletiva o avanço do projeto. Inicialmente, 
-o foco esteve na compreensão teórica da arquitetura da DE1-SoC, da 
-comunicação entre HPS e FPGA e do funcionamento do acesso via MMIO. A 
-partir disso, nosso projeto foi incrementando pouco a pouco evoluçoes de cada seção, passando pela 
-configuração e entendimento do ambiente Linux embarcado que irianos trabalhaar, com a complemtntação e interligação do co processador cedido por um monitor da materia, testes iniciais em linguagem C 
-e, posteriormente, implementação do driver final em Assembly ARM. Durante 
-todo o processo, os roteiros de laboratório serviram como base para o 
-desenvolvimento, principalmente o Lab 0, voltado para a introdução de como funciona a interligação dos modulos com 
-a placa e acesso via SSH, e o Lab 2, que introduziu a integração HPS↔FPGA 
-utilizada no projeto.
+avançando de forma crescente ao longo das sessões tutoriais, com cada seção com metas, ideias e fatos que auxiliaram de forma coletiva o avanço do projeto. 
+Detalharei na sequência como nosso grupo desenvolveu a solução.
 
-O primeiro contato com a placa aconteceu durante o Lab 0, que apresentou 
-o acesso à DE1-SoC via SSH e a utilização de comandos Linux diretamente 
-no terminal da placa. Essa etapa foi importante para que o grupo entendesse 
-como executar programas, transferir arquivos e utilizar o ambiente Linux 
-embarcado da FPGA.
+**Passo 1:**
+ Entender o funcionamento do co-processador base, como era feita a comunicação e os barramentos de entrada / saída, alguns conceitos linux e instalação de ferramentas.
 
-Em seguida, o Lab 2 serviu como principal base técnica do projeto, 
-introduzindo a comunicação HPS↔FPGA através de MMIO (Memory-Mapped I/O). 
-Nesse laboratório foram estudados conceitos como Platform Designer, 
-Lightweight Bridge, utilização de PIOs e acesso a registradores mapeados 
-em memória usando /dev/mem e mmap em C. A partir desse ponto, o grupo gnahou uma nova froma de resolver o problema, e 
-passou a compreender como o processador ARM poderia controlar periféricos 
-implementados na FPGA.
+**Passo 2:**
+ Com base nos roteiros apresentados, percebeu-se a necessidade da implementação dos PIO's atráves do Platform Designer do Quartus, então, junto com monitores da disciplina, implementamos a conexão e os endereços base dos barramentos. Menciona-se também que foi disponibilizado um projeto intitulado "my_first_hps-fpga_base" que serviu de top-level para o co-processador ser instanciado.
 
-Após o entendimento inicial da arquitetura, foi disponibilizado pelo monitor 
-o co-processador ELM já implementado em Verilog. Entretanto, o módulo foi 
-entregue sem integração pronta com o HPS, exigindo que o grupo realizasse 
-toda a configuração do sistema no Platform Designer. Foram então adicionados 
-os PIOs, que ja foram apresentados e na proxima seção vao ser aprofundados, eles foram necessários para entrada de dados, sinais de controle e leitura de 
-resultados, conectando-os ao HPS através da Lightweight HPS-to-FPGA Bridge.
+ <p align="center">
+  <img src="images/PIO.png" alt="PIO" width="500">
+</p>
 
-Para permitir o desenvolvimento fora do laboratório, também foi configurada 
-uma máquina virtual Linux nos notebooks pessoais, para o melhor entendimento e disponibilidade de desenvolver sem depender tanto do LEDS. Dessa forma, o código Assembly 
-podia ser escrito e compilado localmente, enquanto os testes finais eram 
-executados remotamente na DE1-SoC via SSH, de forma que os testes eram ja realizados sem perca de tempo, o que fez acelerar mais a resolução do problema.
+ **Passo 3:**
+  Durante as sessões, foram discutidos pseudocódigos e conceitos que nos ajudariam no desenvolvimento, chegamos a seguinte conclusão para a leitura do arquivo e montagem da instrução:
+  
+<p align="center">
+  <img src="images/pseudocodigo.jpeg" alt="Pseudocodigo" width="500">
+</p>
 
-Os primeiros testes em baixo nível foram realizados utilizando pequenos 
-programas em Assembly para acender LEDs da FPGA, esses testes teve como motivação um das metas de uma seção, que foi bem produtiva por conta desse priemiro contato com a programção de fato em assembly, alem da pesquisa e entendimento do Drive. Inicialmente ocorreram 
-erros de segmentação, o que ajudou a identificar que o hardware ainda não 
-estava corretamente gravado na placa. Após o pinamento dos sinais, compilação 
-do projeto no Quartus e gravação do arquivo .sof, o acesso aos endereços 
-físicos passou a funcionar corretamente.
+Ou seja, um vetor com o conteúdo do arquivo e um loop percorrendo as posições, em que a posição serviria de endereço e o valor seria o dado, por fim, colocaria o opcode e finalizaria a montagem da instrução.
+Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importantes: Sycall e buffer.
 
-Com o hardware validado, foi desenvolvido inicialmente um driver em linguagem 
-C, antes mesmo de assembly puro, para testar toda a lógica de comunicação com o co-processador. Nessa etapa 
-foram implementadas as rotinas de envio de pesos, bias, imagem e leitura do 
-dígito predito, facilitando por ser em C, a depuração. O uso do C permitiu validar rapidamente o protocolo de 
-comunicação antes da implementação definitiva em Assembly ARM.
+<p align="center">
+  <img src="images/syscalls.jpeg" alt="syscalls" width="500">
+</p>
 
-Depois da validação funcional em C, o driver foi reescrito em Assembly ARM. 
-O desenvolvimento foi feito de forma incremental, função por função, 
-realizando testes constantes diretamente na placa. Durante essa etapa, o 
-grupo trabalhou diretamente com instruções de manipulação de bits, 
-deslocamentos, máscaras e escrita em registradores mapeados em memória, 
-aprofundando o entendimento sobre comunicação de hardware em baixo nível.
+ **Passo 4:**
+  Após a conclusão de que esse era o caminho, iniciamos o desenvolvimento em assembly para a função store_bias (que seria a mais simples de implementar). 
+  Aplicando o conceito de chamadas ao sistema, conseguimos imprimir o valor de qualquer posição do vetor (com offset), vimos que com o loop conseguiríamos montar a instrução, mas esbarramos com problemas de endianess (que será abordado mais na frente nos testes).
+  Ainda nessa etapa, com estratégias lógicas (shift's, and's, or's), imprimimos o formato da instrução seguindo o padrão estabelecido.
+  
+**Passo 5:**
+Posteriormente, montamos o loop e consequentemente todas as outras funções de armazenamento de dados.
+Com auxílio de projetos de outros colegas, montamos também a função mapeia memória, as funções de envio e as de polling. Em tese, tudo pronto, mas como testar?
+Esbarramos nessa etapa, visto que o co-processador base não tinha um modo de verificação da leitura e armazenamento dos dados.
+A solução? Seguindo conselhos de colegas e monitores, montamos um código em C correspondente ao nosso para testar a inferência, se ela saísse correta, nosso projeto estaria funcional.
 
-Por fim, foram realizados testes completos de classificação utilizando o 
-driver final em Assembly e o hardware gravado na FPGA. Os resultados eram 
-exibidos no terminal via SSH, confirmando o funcionamento correto da 
-integração entre HPS, FPGA e o co-processador ELM.
+**Passo 6:**
+Após a certeza de que nosso projeto estava funcional, começamos a elaborar o cabeçalho e uma aplicação em C que consumisse a API e automatizasse os testes, concluindo a finalização dos requisitos.
 
 ## Descrição da Solução
 
