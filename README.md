@@ -1,6 +1,6 @@
 # Marco-2
 # Projeto Coprocessador - Sistemas Digitais (PBL)
-Este repositório contém o desenvolvimento de um coprocessador para a disciplina de Sistemas Digitais. Atualmente, o projeto encontra-se na finalização do **Marco 2**, focado na integração dos módulos fundamentais e estruturação do Datapath.
+Este repositório contém o desenvolvimento de um coprocessador para a disciplina de Sistemas Digitais.
 
 - [Introdução e Definição do Problema](#introdução-e-definição-do-problema)
    - [Requisitos Principais](#requisitos-principais)
@@ -182,22 +182,8 @@ acordo com a instrução que será executada.
 **Signals** barramento de entrada de 3 bits utilizado para enviar os sinais 
 de controle externos ao co-processador. Cada bit possui uma utilidade:
 
-BIT 0 | Enable | Sinaliza que a instrução presente no barramento deve ser executada 
-
-BIT 1 | Clear | Limpa resquícios de uma instrução anterior com erro 
-
-BIT 2 | Reset | Reseta os registradores do co-processador 
-
 **Data Out** é o único barramento de saída, com largura de 32 bits, porém nem 
 todos os bits são utilizados:
-
-BIT 0-3  mostra o resultado ou seja o  Dígito predito pela rede neural. Confiável apenas após a conclusão da inferência 
-
-BIT 4 apresenta o Done ou seja ativada quando uma operação é concluída. Permanece ativa até que uma nova instrução comece 
-
-BIT 5 vai busy indica que uma operação ainda está sendo executada 
-
-BIT 6 error indica que a instrução anterior não foi executada corretamente. Mesmo que tenha sido concluída, o resultado não é confiável 
 
 #### ISA — Conjunto de Instruções
 
@@ -450,10 +436,6 @@ Por fim, fizemos testes com a aplicação final em C sem mandar alguns arquivos.
  
 **Passo 4:**
  Ainda no terminal, escrever e mandar make run para rodar o projeto.
- 
----
-
-# Resultados e Conclusão
 
 # Referências
 
