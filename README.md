@@ -43,23 +43,17 @@ Ao final deste marco, o sistema deve estar apto para que, no Marco 3, uma aplica
 
 ## Requisitos Principais
 
-### Integração HPS↔FPGA
-Fazer a integração entre o HPS e o co-processador ELM na FPGA utilizando o Platform Designer (Quartus), permitindo que o processador ARM consiga se comunicar com o hardware implementado em Verilog.
+**Integração HPS↔FPGA**
 
-### Driver Linux em Assembly ARM
-Desenvolver um driver com funções em Assembly ARM para realizar o controle do co-processador, que deve inicializar o hardware, enviar os arquivos necessários, iniciar a inferência, aguardar a finalização e ler resultados.
+**Driver Linux em Assembly ARM**
 
-### Comunicação via MMIO
-Implementar a comunicação utilizando MMIO (Memory-Mapped I/O), permitindo que o Linux consiga ler e escrever dados nos registradores do co-processador através de endereços de memória.
+**Comunicação via MMIO**
 
-### Controle do Co-processador
-Implementar as rotinas de controle do co-processador incluindo início de inferência, monitoramento via flags Done/Busy/Error e leitura do resultado.
+**Controle do Co-processador**
 
-### Leitura e Envio de Dados
-Garantir o envio correto dos dados de entrada para o co-processador e a leitura dos resultados retornados após a inferência.
+**Leitura e Envio de Dados**
 
-### Demonstração de Estabilidade
-Realizar testes para verificar se a comunicação entre HPS e FPGA está funcionando corretamente e de forma estável durante várias execuções.
+**Demonstração de Estabilidade**
 
 ## Fundamentação Teórica
 Para a elaboração do Driver, alguns conceitos importantes precisam ser mencionados:
@@ -88,13 +82,6 @@ espaço de memória do processo. Na prática, isso permite que o código em
 Assembly consiga acessar os PIOs diretamente utilizando ponteiros, como 
 se estivesse acessando variáveis normais da memória.
 
-### Polling
-Polling é uma forma simples de acompanhar o funcionamento de um hardware durante a execução de alguma tarefa. Em vez do hardware avisar sozinho quando terminou o processamento, o software fica verificando continuamente o registrador de status até receber a resposta esperada.
-
-No projeto que fizemos, isso acontece durante a inferência do co-processador ELM. Depois que o Linux envia os dados e inicia o processamento, o driver fica lendo as flags de status, como Busy e Done, para verificar se a execução ainda está acontecendo ou se já foi finalizada.
-
-Antes de verificar a flag Done, o driver também checa a flag Error. Caso ela esteja ativa, significa que ocorreu algum problema durante o processamento, evitando que o sistema fique preso em um loop de espera infinito.
-
 ### Endianness Big/Little 
 
 Durante o desenvolvimento do nosso driver em Assembly ARM, foi encontrado um problema com big e little endian durante a leitura de alguns arquivos. 
@@ -103,15 +90,7 @@ memória. Os arquivos .bin dos pesos e bias foram gerados em big-endian,
 enquanto o processador ARM da DE1-SoC trabalha em little-endian.
 
 Com isso, ao utilizar a instrução ldrh para ler valores de 16 bits, os 
-bytes eram interpretados na ordem errada de maneira invertida. Um exemplo foi o valor 0xFFF6, 
-que representa -10. Sem correção, o ARM interpretava o valor como 63231, 
-comprometendo os resultados da inferência.
-
-Para resolver o problema, o driver utilizou a instrução rev16, responsável 
-por inverter a ordem dos bytes, seguida de sxth, que faz a extensão de 
-sinal para 32 bits. Com isso, os dados passaram a ser interpretados 
-corretamente antes do envio ao co-processador.
-
+bytes eram interpretados na ordem errada de maneira invertida.
 
 ---
 
@@ -127,7 +106,7 @@ o HPS, que é o processador ARM responsável por rodar o Linux, e a FPGA,
 onde o co-processador ELM foi implementado em Verilog.
 
 Como essas duas partes precisam se comunicar e trocar informações, a placa possui bridges 
-que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridge,decidido e apresentado em uma das seções tutoriais,  
+que fazem essa comunicação. No noaso projeto foi utilizada a Lightweight Bridge, decidido e apresentado em uma das seções tutoriais,  
 que permite que o processador ARM consiga acessar os registradores do 
 hardware na FPGA de forma mais simples e direta.
 
@@ -418,7 +397,7 @@ Dando continuidado nos testes, fizemos o código equivalente em C para testar a 
 
 Por fim, fizemos testes com a aplicação final em C sem mandar alguns arquivos. E com isso chegamos a conclusão que o reset não limpa as memórias (confirmado pelo projetista) e que o driver influencia diretamente no resultado da inferência (em alguns casos todos os valores sairam errados, em outras a acurácia foi de cerca de 30%)
 
-## Resultados e Melhorias
+# Resultados e Melhorias
 
  O marco 2 foi concluido de forma completa e satisfatória, apresentando um driver funcional, uma aplicação em C para testes automatizados e acurácia de mais de 80% (Normal para o co-processador apresentado). Auxiliando diretamente no aprendizado dos alunos envolvidos.
  Entretanto, algumas melhorias futuras podem ser mencionadas. Principalmente o excesso de syscalls dentro do driver (apresenta fragilidade de segurança) e uma aplicação ainda mais funcional em C
