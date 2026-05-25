@@ -16,7 +16,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
          - [Descrição](#descrição)
          - [Barramentos](#barramentos)
          - [ISA — Conjunto de Instruções](#isa--conjunto-de-instruções)
-- [Metodologia](#metodologia)
+   - [Metodologia](#metodologia)
 - [Descrição da Solução](#descrição-da-solução)
    - [Arquitetura Geral](#arquitetura-geral)
    - [Funções Implementadas](#funções-implementadas)
