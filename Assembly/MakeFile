@@ -1,0 +1,13 @@
+build:
+	@gcc -marm -c driver.c -o driver.s -o exe
+
+run:
+	sudo ./exe
+
+help:
+	@echo ""
+	@echo "📘 Comandos disponíveis:"
+	@echo "  make build   - Compila o programa (gera exe)"
+	@echo "  make run     - Executa o programa (usa sudo)"
+	@echo "  make help    - Mostra esta mensagem de ajuda"
+	@echo ""
