@@ -28,7 +28,7 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
 - [Testes e Resultados](#testes-e-resultados)
-- [Modo de Uso](#modo-de-uso)
+- [Conclusao](#conclusao)
 - [Referências](#referências)
 ---
 
@@ -414,6 +414,9 @@ Leitura do resultado.
 ---
 
 ## Testes e Resultados
+Todo o desenvolvimento foi apoiado em testes e debug's.
+Após a implementação da função store_bias, necessitamos de ver o resultado do índice 0 do vetor afim de sabermos se o valor havia sido lido corretamente.
+Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o valor era lido invertido e adicionamos o rev16 para solucionar
 
 ---
 
