@@ -413,14 +413,32 @@ Leitura do resultado.
 
 ---
 
-## Testes e Resultados
+# Testes e Resultados
+
+## Testes
+
 Todo o desenvolvimento foi apoiado em testes e debug's.
 Após a implementação da função store_bias, necessitamos de ver o resultado do índice 0 do vetor afim de sabermos se o valor havia sido lido corretamente.
-Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o valor era lido invertido e adicionamos o rev16 para solucionar
+Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o valor era lido invertido e adicionamos o rev16 para solucionar.
+<p align="center">
+  <img src="images/teste02.jpeg" alt="syscalls" width="500">
+</p>
 
----
+Após isso, com mais testes, concluimos que o valor era lido sem sinal, e que isso atrapalharia o resultado, assim passamos a utilizar o ldrsh (Le 2 bytes com sinal).
 
-## Modo de Uso
+Outro teste importante realizado, foi o de imprimir os 32 bits que seriam mandados para o data_in, visto que, assim concluimos que a extensão de sinal deveria ser feita após a reversão e mudamos novamente a estrutura para (LDRH + REV16 + SXTH), além de adicionarmos máscaras para que o valor não saísse errado.
+
+Dando continuidado nos testes, fizemos o código equivalente em C para testar a inferência e conexões via PIO's.
+
+Por fim, fizemos testes com a aplicação final em C sem mandar alguns arquivos. E com isso chegamos a conclusão que o reset não limpa as memórias (confirmado pelo projetista) e que o driver influencia diretamente no resultado da inferência (em alguns casos todos os valores sairam errados, em outras a acurácia foi de cerca de 30%)
+
+## Resultados e Melhorias
+
+ O marco 2 foi concluido de forma completa e satisfatória, apresentando um driver funcional, uma aplicação em C para testes automatizados e acurácia de mais de 80% (Normal para o co-processador apresentado). Auxiliando diretamente no aprendizado dos alunos envolvidos.
+ Entretanto, algumas melhorias futuras podem ser mencionadas. Principalmente o excesso de syscalls dentro do driver (apresenta fragilidade de segurança) e uma aplicação ainda mais funcional em C
+
+
+# Modo de Uso
 **Passo 1:**
  Faça download do projeto e via ssh transfira a pasta "Assembly para a placa".
  
@@ -435,7 +453,9 @@ Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o va
  
 ---
 
-## Referências
+# Resultados e Conclusão
+
+# Referências
 
 MATOS, Kamilly. coprocessador-de-imagens-pbl-sd-2. Versão/Branch principal. GitHub, 2026. Disponível em: https://github.com/kamillymatos/coprocessador-de-imagens-pbl-sd-2. Acesso em: 24 maio 2026.
 
