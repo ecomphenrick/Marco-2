@@ -359,6 +359,7 @@ ela utiliza a função mandar_sem_espera, que realiza apenas o pulso de Enable
 sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
 o programa permaneceria travado esperando um Done que nunca seria ativado.
 
+
 > [!WARNING]
 > **Atenção:** Caso tenha curiosidade ou queira ver como isso foi implementado em assembly, o código devidamente comentado está disponível em Assembly/driver.s e a aplicação em C está disponível em Assembly/driver.c.
 
@@ -380,6 +381,11 @@ Inicio da inferência.
 **Passo 5:**
 Leitura do resultado.
 
+<p align="center">
+  <img src="images/fluxogeral.png" alt="Fluxo Geral" width="500">
+   <br>
+  <em>Figura 5: Caminho dos arquivos Aplicação - Coprocessador (gerado com IA). </em>
+</p>
 ---
 
 # Testes e Resultados
@@ -392,7 +398,7 @@ Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o va
 <p align="center">
   <img src="images/teste02.jpeg" alt="syscalls" width="500">
    <br>
-  <em>Figura 5: Testes da leitura do valor .</em>
+  <em>Figura 6: Testes da leitura do valor .</em>
 </p>
 
 Após isso, com mais testes, concluimos que o valor era lido sem sinal, e que isso atrapalharia o resultado, assim passamos a utilizar o ldrsh (Le 2 bytes com sinal).
@@ -438,4 +444,4 @@ ARM DEVELOPER. Arm Documentation. Disponível em: https://developer.arm.com/docu
 
 TERASIC TECHNOLOGIES. Terasic Inc.: Expertise in FPGA/ASIC Design. Disponível em: http://www.terasic.com.tw/. Acesso em: 24 maio 2026.
 
-As imagens do pseudocodigo e das syscalls foram feitas em Inteligência Artificial.
+As imagens do pseudocodigo, das syscalls e do fluxo foram feitas em Inteligência Artificial.
