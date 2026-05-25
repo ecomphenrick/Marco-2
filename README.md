@@ -234,7 +234,7 @@ Detalharei na sequência como nosso grupo desenvolveu a solução.
 </p>
 
 Ou seja, um vetor com o conteúdo do arquivo e um loop percorrendo as posições, em que a posição serviria de endereço e o valor seria o dado, por fim, colocaria o opcode e finalizaria a montagem da instrução.
-Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importantes: Sycall e buffer - detalhados posteriormente.
+Mas como tranformar um arquivo em um vetor? Apresentamos dois conceitos importantes: Syscall e buffer - detalhados posteriormente.
 
  **Passo 4:**
   Após a conclusão de que esse era o caminho, iniciamos o desenvolvimento em assembly para a função store_bias (que seria a mais simples de implementar). 
@@ -389,6 +389,9 @@ apenas alguns ciclos de clock e não ativa o sinal Done. Por esse motivo
 ela utiliza a função send_no_wait, que realiza apenas o pulso de Enable 
 sem entrar no loop de polling. Caso fosse utilizado polling nessa instrução, 
 o programa permaneceria travado esperando um Done que nunca seria ativado.
+
+> [!WARNING]
+> **Atenção:** Caso tenha curiosidade ou queira ver como isso foi implementado em assembly, o código devidamente comentado está disponível em Assembly/driver.s e a aplicação em C está disponível em Assembly/driver.c.
 
 ### Fluxo de Execução
 Como nesse marco o objetivo era conectar o hardware com uma aplicação simples, o fluxo é sequencial:
