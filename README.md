@@ -172,6 +172,8 @@ O formato de cada instrução varia devido a quantidade de bits destinada para c
 
 <p align="center">
   <img src="images/instrucao_bias.png" alt="Instrução Bias" width="500">
+   <br>
+  <em>Figura 1: Fluxograma da instrução de Bias no coprocessador base.</em>
 </p>
 
 
@@ -189,6 +191,8 @@ Detalharei na sequência como nosso grupo desenvolveu a solução.
 
  <p align="center">
   <img src="images/PIO.png" alt="PIO" width="500">
+    <br>
+  <em>Figura 2: Screenshot do Platform Designer.</em>
 </p>
 
  **Passo 3:**
@@ -196,6 +200,8 @@ Detalharei na sequência como nosso grupo desenvolveu a solução.
   
 <p align="center">
   <img src="images/pseudocodigo.jpeg" alt="Pseudocodigo" width="500">
+   <br>
+  <em>Figura 3: Pseudocódigo apresentado nas sessões (gerado com IA).</em>
 </p>
 
 Ou seja, um vetor com o conteúdo do arquivo e um loop percorrendo as posições, em que a posição serviria de endereço e o valor seria o dado, por fim, colocaria o opcode e finalizaria a montagem da instrução.
@@ -270,6 +276,8 @@ depois fechar o arquivo.
 
 <p align="center">
   <img src="images/syscalls.jpeg" alt="syscalls" width="500">
+   <br>
+  <em>Figura 4: Funcionamento das syscalls (gerado com IA).</em>
 </p>
 
 O open retorna um identificador chamado file descriptor, que é usado nas 
@@ -288,7 +296,7 @@ sem sinal.
 
 ### Montagem da Instrução de 32 bits
 
-A comunicação entre o processador ARM e o co-processador do nosso projeto foi fwito implementando na 
+A comunicação entre o processador ARM e o co-processador do nosso projeto foi feito implementando na 
 FPGA através de instruções de 32 bits definidas pela ISA do 
 projeto. Cada instrução possui campos específicos e diferentes, como opcode, endereço 
 e dado, ocupando posições fixas dentro desses 32 bits, como já visto 
@@ -386,6 +394,8 @@ Após a implementação da função store_bias, necessitamos de ver o resultado 
 Com isso, utilizando $echo (Apresenta o byte menos significativo) vimos que o valor era lido invertido e adicionamos o rev16 para solucionar.
 <p align="center">
   <img src="images/teste02.jpeg" alt="syscalls" width="500">
+   <br>
+  <em>Figura 5: Testes da leitura do valor .</em>
 </p>
 
 Após isso, com mais testes, concluimos que o valor era lido sem sinal, e que isso atrapalharia o resultado, assim passamos a utilizar o ldrsh (Le 2 bytes com sinal).
