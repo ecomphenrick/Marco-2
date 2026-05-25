@@ -170,7 +170,7 @@ O formato de cada instrução varia devido a quantidade de bits destinada para c
 <p align="center">
   <img src="images/instrucao_bias.png" alt="Instrução Bias" width="500">
    <br>
-  <em>Figura 1: Fluxograma da instrução de Bias no coprocessador base.</em>
+  <em>Figura 1: Montagem da instrução de Bias no coprocessador base.</em>
 </p>
 
 
