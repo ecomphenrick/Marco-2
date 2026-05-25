@@ -277,8 +277,7 @@ próximas operações. Em seguida, o read copia os bytes do arquivo para
 buffers declarados na memória do programa. Depois da leitura, o arquivo é 
 fechado com close, liberando o recurso no sistema.
 
-Cada arquivo possui um buffer próprio na RAM. Os arquivos de bias, beta e 
-imagem são pequenos e podem ser carregados completamente. 
+Cada arquivo possui um buffer próprio na RAM. 
 
 Após a leitura, alguns valores ainda precisam ser convertidos antes de serem 
 usados. Bias, beta e pesos são números de 16 bits com sinal, então o código 
