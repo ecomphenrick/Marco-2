@@ -7,7 +7,6 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Fundamentação Teórica](#fundamentação-teórica)
       - [MMIO (Memory-Mapped I/O)](#mmio-memory-mapped-io)
       - [Drive /dev/mem e Syscalls](#Drive-/dev/mem-e-Syscalls)
-      - [Polling](#polling)
       - [Endianness Big/Little](#Endianness-Big/Little)
 - [Materiais e Métodos](#materiais-e-métodos)
    - [Materiais](#materiais) 
@@ -20,7 +19,6 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
 - [Metodologia](#metodologia)
 - [Descrição da Solução](#descrição-da-solução)
    - [Arquitetura Geral](#arquitetura-geral)
-   - [Escolha do /dev/mem](#escolha-do-devmem)
    - [Funções Implementadas](#funções-implementadas)
    - [Montagem da Instrução de 32 bits](#montagem-da-instrução-de-32-bits)
    - [Protocolo de Envio — Enable e Polling](#protocolo-de-envio--enable-e-polling)
@@ -28,7 +26,6 @@ Este repositório contém o desenvolvimento de um coprocessador para a disciplin
    - [Fluxo de Execução](#fluxo-de-execução)
 - [Modo de Uso](#modo-de-uso)
 - [Testes e Resultados](#testes-e-resultados)
-- [Conclusao](#conclusao)
 - [Referências](#referências)
 ---
 
